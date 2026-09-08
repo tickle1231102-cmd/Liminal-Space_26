@@ -1,0 +1,6 @@
+---
+description: After Hours project rules — source of truth lives in AGENTS.md
+alwaysApply: true
+---
+
+이 저장소의 규칙 원본은 [AGENTS.md](../../AGENTS.md)입니다. 코드를 작성/수정하기 전에 항상 그 파일을 읽고 따르세요. 기술 스택(Three.js/R3F/Rapier/Capacitor/Electron 고정), Unreal·Unity 에디터 금지, 3스토어(App Store·Google Play·Steam) 동시 배포 전제, 게임 디자인 원칙(목표 없는 배회형, 대사 없음, 공포 아닌 위화감)을 어기는 제안을 하지 마세요. 규칙 갱신은 이 파일이 아니라 `AGENTS.md`에서 이루어집니다.
