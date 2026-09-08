@@ -44,4 +44,33 @@
 - `CLAUDE.md`, `.cursor/rules/project.mdc` — 각 도구가 자동으로 찾는 위치에 놓인 포인터. 내용은 항상 `AGENTS.md`를 가리키기만 하며, 규칙 본문은 여기 두지 않는다.
 - `PRD.md` — 제품 요구사항 문서 원본 (한글)
 - `docs/prd.html` — PRD의 Artifact 렌더링본 (시각 자료, 참고용 스냅샷)
-- 이후 소스 코드는 표준 웹 프로젝트 구조(`src/`, `public/` 등)를 따르며, 도입 시 이 파일에 구조를 추가한다.
+- `docs/STORE_CHECKLIST.md` — 3스토어 출시 체크리스트
+- `src/app` — 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지
+- `src/player` — 1인칭 컨트롤러, 상호작용
+- `src/world` — 구역 화이트박스(정문·미드웨이·먹거리·백스테이지), 파편, 절차적 소품
+- `src/objects` — 풍선·탑승 시트 등 물리 오브젝트
+- `src/audio` — 피치 워블 / 앰비언스
+- `src/proc` — seedrandom 기반 재시드
+- `src/input` — 키보드·마우스·터치 추상화
+- `public/assets` — glTF/오디오 (출처는 `ATTRIBUTION.md`)
+- `electron/` — Steam용 Electron 셸
+- `capacitor.config.json` — iOS/Android Capacitor 래핑 설정
+- `scripts/perf-checkpoint.mjs` — 모바일 성능 go/no-go 리포트
+
+## Claude Code / Cursor 역할 분담
+
+두 도구 모두 이 저장소에서 작업하지만, 강점이 다른 영역을 겹치지 않게 나눈다. 이 절은 위 "절대 규칙"의 실행 세칙이며 스택 자체를 바꾸지 않는다(Rapier `@react-three/rapier`, 데스크톱은 Electron, 모바일은 Capacitor).
+
+- **Cursor (IDE / 비주얼 작업)**
+  - 담당: 3D 씬 구성, 셰이더, Rapier 콜라이더/물리 파라미터 튜닝, R3F 핫리로드로 즉시 눈으로 확인하며 반복하는 편집.
+  - 제약: 터미널에서 네이티브 빌드(Xcode, Gradle, Electron 패키징)를 직접 수행하지 않는다.
+- **Claude Code (CLI 에이전트)**
+  - 담당: 플랫폼 패키징 및 빌드 트러블슈팅 — Capacitor iOS/Android(`xcodebuild`, `gradlew`), Electron 데스크톱 빌드(`electron-builder`), 네이티브 SDK 연동(Steamworks, StoreKit, Google Play Billing), 스토어 심사 체크리스트(`docs/STORE_CHECKLIST.md`) 대응.
+  - 제약: 터미널 작업 중 3D 씬의 비주얼/좌표/미학적 디테일(카메라 위치, 머티리얼 값, 조명 세팅 등)을 임의로 바꾸지 않는다 — 이런 변경이 필요하면 Cursor로 넘기거나 사용자에게 확인한다.
+
+## 기술 세칙
+
+- Capacitor WebView(iOS/Android)와 Electron `BrowserWindow`(Steam) 양쪽 모두, Rapier WASM 멀티스레딩(SharedArrayBuffer)을 쓰려면 COOP(`same-origin`)/COEP(`require-corp`) 헤더를 활성화해야 한다.
+- 플랫폼별 분기가 필요한 로직은 `src/input` 같은 기존 추상화 계층 관례를 따르고, 게임 코어 로직(`src/player`, `src/world`, `src/objects` 등)에 플랫폼 전용 API를 직접 끌어들이지 않는다.
+
+

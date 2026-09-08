@@ -1,0 +1,41 @@
+{
+  "name": "after-hours",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "After Hours — liminal amusement park walking simulator",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "cap:sync": "npm run build && npx cap sync",
+    "electron:dev": "electron electron/main.cjs",
+    "perf:report": "node scripts/perf-checkpoint.mjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.4",
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/postprocessing": "^3.0.4",
+    "@react-three/rapier": "^2.1.0",
+    "@capacitor/core": "^7.4.2",
+    "howler": "^2.2.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "seedrandom": "^3.0.5",
+    "three": "^0.179.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.2",
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/ios": "^7.4.2",
+    "@types/howler": "^2.2.12",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@types/seedrandom": "^3.0.8",
+    "@types/three": "^0.179.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "electron": "^37.2.6",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2"
+  }
+}

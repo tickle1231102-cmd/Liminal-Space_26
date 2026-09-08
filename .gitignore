@@ -1,1 +1,29 @@
 .omc/
+node_modules/
+dist/
+dist-electron/
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+
+# Capacitor / native
+ios/
+android/.gradle/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+*.apk
+*.aab
+*.ipa
+
+# IDE / tooling
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Perf / logs
+perf-reports/
+*.log
