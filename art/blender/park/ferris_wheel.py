@@ -1,5 +1,5 @@
 """Midway ferris wheel. Double rim (front/back, 1.2 m apart) on an axle 8 m up, held by two
-A-frames outside the rims. Gondolas hang *between* the rims so nothing crosses their sweep;
+A-frames outside the rims. Open gondola cars hang *between* the rims so nothing crosses their sweep;
 the lowest cabin clears the ground by ~0.4 m. Boarding deck + operator booth sit in front.
 
 Animated (45 s loop): "Wheel" spins about the axle, each "Gondola_i" counter-rotates to hang level.
@@ -76,9 +76,19 @@ for i in range(8):
     px, pz = math.cos(a) * R, math.sin(a) * R
     pivot = empty(f"Gondola_{i}", (px, 0, pz))
     cab = material(f"Gondola_{i}", COLORS[i], roughness=0.4, metallic=0.15, emission=COLORS[i], strength=0.5)
+    # Open car (riders look out): floor, waist-high panels, corner posts, roof
+    top = pz - 0.34
+    bottom = top - CAB[2]
     g = [box("Hanger", (0.06, 0.06, 0.3), (px, 0, pz - 0.15), steel),
-         box("Roof", (CAB[0] + 0.1, CAB[1] + 0.06, 0.08), (px, 0, pz - 0.3), roofm),
-         box("Cabin", CAB, (px, 0, pz - 0.34 - CAB[2] / 2), cab)]
+         box("Roof", (CAB[0] + 0.1, CAB[1] + 0.06, 0.08), (px, 0, top + 0.04), roofm),
+         box("Floor", (CAB[0], CAB[1], 0.06), (px, 0, bottom + 0.03), cab)]
+    wall = 0.5
+    for sx in (-1, 1):
+        g.append(box(f"SideX_{sx}", (0.04, CAB[1], wall), (px + sx * CAB[0] / 2, 0, bottom + wall / 2), cab))
+        g.append(box(f"SideY_{sx}", (CAB[0], 0.04, wall), (px, sx * CAB[1] / 2, bottom + wall / 2), cab))
+        for sy in (-1, 1):
+            g.append(box(f"Post_{sx}_{sy}", (0.05, 0.05, CAB[2]), (px + sx * CAB[0] / 2, sy * CAB[1] / 2, bottom + CAB[2] / 2), steel))
+    g.append(box("Bench", (CAB[0] - 0.1, 0.3, 0.06), (px, CAB[1] / 2 - 0.2, bottom + 0.42), roofm))
     parent_keep(join_visual(f"GondolaMesh_{i}", g), pivot)
     parent_keep(pivot, wheel)
     key_spin(pivot, 1, frames, turns=1.0)  # counter-rotation keeps the cabin level

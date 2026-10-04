@@ -1,5 +1,5 @@
 """Midway carousel. Animated: node "Platform" turns (15 s loop) carrying 8 horses
-that bob 4x per turn. Riders/props mount to "Platform" at runtime.
+that bob 4x per turn. "RideMount_0" is the boardable horse slot (mounted at runtime).
 Horses sit at 22.5 deg + k*45 deg so the boardable seat at angle 0 fills a gap."""
 import math, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
@@ -20,8 +20,12 @@ join_visual("CarouselBase", [base])
 p = [cylinder("Deck", 4.6, 0.24, (0, 0, 0.18), deck, verts=48),
      cylinder("Pole", 0.22, 3.2, (0, 0, 1.9), brass, verts=16),
      cone("Canopy", 4.8, 0.2, 1.6, (0, 0, 3.3), canopy, verts=16),
-     cylinder("CanopyRing", 4.5, 0.12, (0, 0, 2.5), glow, verts=48),
+     cylinder("Valance", 4.55, 0.3, (0, 0, 2.55), canopy, verts=48, capped=False),
      sphere("Finial", 0.25, (0, 0, 4.2), brass, segments=12)]
+# Light band around the canopy edge (a ring, not a disc: riders look up into the canopy)
+bpy.ops.mesh.primitive_torus_add(major_radius=4.6, minor_radius=0.05, major_segments=64, minor_segments=8,
+                                 location=(0, 0, 2.42))
+band = bpy.context.active_object; band.name = "LightBand"; band.data.materials.append(glow); p.append(band)
 for i in range(16):
     a = i / 16 * 2 * math.pi
     p.append(sphere(f"Bulb_{i}", 0.07, (math.cos(a) * 4.62, math.sin(a) * 4.62, 2.38), glow, segments=8))
@@ -42,6 +46,13 @@ def horse(i, a, mats):
 
 for i in range(8):
     horse(i, (i + 0.5) / 8 * 2 * math.pi, mats)
+
+# Boardable slot in the gap at angle 0: an empty the runtime mounts carousel_horse.glb + the rider on.
+# Same radius, facing and bob as the baked horses so the ridden horse moves in step with them.
+ride = empty("RideMount_0", (2.9, 0, 1.05))
+ride.rotation_euler = (0, 0, math.pi)
+parent_keep(ride, platform)
+key_bob(ride, frames, cycles=4, amplitude=0.22, phase=-0.35)
 
 key_spin(platform, 2, frames, turns=1.0)
 

@@ -22,7 +22,6 @@ import { BackstageZone } from '../world/BackstageZone'
 import { ProceduralProps, useBalloonTint } from '../world/ProceduralProps'
 import { NarrativeFragments } from '../world/NarrativeFragments'
 import { Balloon } from '../objects/Balloon'
-import { RideSeat } from '../objects/RideSeat'
 import { RideAudioSource } from '../audio/RideAudioSource'
 import { WorldSeedContext } from '../proc/WorldSeedContext'
 import type { ComfortSettings } from '../app/comfort'
@@ -53,14 +52,6 @@ function WorldContent({
   onReseed: () => void
 }) {
   const tint = useBalloonTint('plaza')
-  const [riding, setRiding] = useState(false)
-  const [ridePos, setRidePos] = useState<THREE.Vector3 | null>(null)
-
-  const onRideChange = useCallback((r: boolean, p: THREE.Vector3 | null) => {
-    setRiding(r)
-    setRidePos(p)
-  }, [])
-
   const chroma = useMemo(() => new THREE.Vector2(0.0006, 0.0006), [])
 
   if (scene === 'school') {
@@ -98,11 +89,7 @@ function WorldContent({
         <ProceduralProps zone="plaza" />
       </PlazaZone>
       <DistanceLod center={[0, 0, -42]} near={60}>
-        <MidwayZone
-          carouselRiders={
-            <RideSeat id="carousel-horse-0" label="Carousel horse" position={[2.9, 1.0, 0]} onRideChange={onRideChange} />
-          }
-        >
+        <MidwayZone>
           <ProceduralProps zone="midway" />
         </MidwayZone>
       </DistanceLod>
@@ -119,8 +106,6 @@ function WorldContent({
       <PlayerController
         comfort={comfort}
         onReseed={onReseed}
-        riding={riding}
-        rideWorldPos={ridePos}
         controlsEnabled={started}
       />
       <RideAudioSource enabled={audioEnabled} />

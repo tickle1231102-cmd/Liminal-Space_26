@@ -3,12 +3,14 @@ import {
   CapsuleCollider,
   CuboidCollider,
   RigidBody,
+  useRapier,
   type RapierRigidBody,
 } from '@react-three/rapier'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
 import { sampleInput } from '../input/controls'
 import { useInteraction } from './InteractionContext'
+import { rideState } from './rideState'
 import type { ComfortSettings } from '../app/comfort'
 
 const WALK_SPEED = 3.4
@@ -17,6 +19,8 @@ const JUMP_SPEED = 6.2
 const MAX_PITCH = Math.PI / 2 - 0.12
 const EYE_HEIGHT = 1.55
 const INTERACT_RANGE = 2.6
+/** Seated eye height above the seat point. */
+const SEATED_EYE = 0.75
 /** Rigid body origin sits at feet; collider rises above. */
 const SPAWN: [number, number, number] = [0, 0.15, 10]
 
@@ -24,8 +28,6 @@ type PlayerProps = {
   spawn?: [number, number, number]
   comfort: ComfortSettings
   onReseed?: () => void
-  riding?: boolean
-  rideWorldPos?: THREE.Vector3 | null
   controlsEnabled?: boolean
 }
 
@@ -33,20 +35,32 @@ export function PlayerController({
   spawn = SPAWN,
   comfort,
   onReseed,
-  riding = false,
-  rideWorldPos = null,
   controlsEnabled = true,
 }: PlayerProps) {
   const body = useRef<RapierRigidBody>(null)
   const yaw = useRef(0)
   const pitch = useRef(0)
   const groundedFrames = useRef(0)
-  const { camera } = useThree()
+  const { camera, scene } = useThree()
   const interaction = useInteraction()
   const focusScratch = useRef(new THREE.Vector3())
   const forward = useRef(new THREE.Vector3())
   const right = useRef(new THREE.Vector3())
   const wish = useRef(new THREE.Vector3())
+  /** Seat yaw last frame (NaN = just boarded) — its change turns the view with the ride. */
+  const lastSeatYaw = useRef(NaN)
+  /** Seat just left: heldId clears on the next render, until then keep the body at the exit. */
+  const dismounted = useRef<string | null>(null)
+  const exitAt = useRef(new THREE.Vector3())
+  /** Frames spent riding without a live seat (seat unmounted / hot reload) — release after a few. */
+  const orphanFrames = useRef(0)
+  const seatPos = useRef(new THREE.Vector3())
+  const seatQuat = useRef(new THREE.Quaternion())
+  const seatEuler = useRef(new THREE.Euler(0, 0, 0, 'YXZ'))
+  const { rapier } = useRapier()
+
+  const held = interaction.heldId ? interaction.getAll().find((i) => i.id === interaction.heldId) : undefined
+  const riding = held?.kind === 'ride'
 
   useEffect(() => {
     if (camera instanceof THREE.PerspectiveCamera) {
@@ -54,6 +68,32 @@ export function PlayerController({
       camera.updateProjectionMatrix()
     }
   }, [camera, comfort.fov])
+
+  // Dev-only console handle for testing far-off spots: __afterHours.teleport(x, y, z, yaw)
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    const w = window as unknown as Record<string, unknown>
+    w.__afterHours = {
+      scene,
+      teleport: (x: number, y: number, z: number, look = yaw.current) => {
+        body.current?.setTranslation({ x, y, z }, true)
+        body.current?.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        yaw.current = look
+        pitch.current = 0
+      },
+      state: () => ({
+        pos: body.current?.translation(),
+        yaw: yaw.current,
+        focused: interaction.focused?.id ?? null,
+        held: interaction.heldId,
+        rides: interaction
+          .getAll()
+          .filter((i) => i.kind === 'ride')
+          .map((i) => ({ id: i.id, at: i.body.current?.translation() })),
+      }),
+    }
+    return () => void delete w.__afterHours
+  }, [interaction, scene])
 
   // Stable camera before first physics tick
   useEffect(() => {
@@ -87,13 +127,62 @@ export function PlayerController({
     const rb = body.current
     if (!rb) return
 
-    if (riding && rideWorldPos) {
-      rb.setNextKinematicTranslation({
-        x: rideWorldPos.x,
-        y: rideWorldPos.y + 0.4,
-        z: rideWorldPos.z,
-      })
-      camera.position.set(rideWorldPos.x, rideWorldPos.y + 1.1, rideWorldPos.z)
+    if (!riding) dismounted.current = null
+    if (riding && dismounted.current === interaction.heldId) {
+      // Waiting for heldId to clear: hold at the exit (the seat keeps publishing its pose meanwhile)
+      const e = exitAt.current
+      rb.setTranslation({ x: e.x, y: e.y, z: e.z }, true)
+      rb.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      return
+    }
+    if (riding) {
+      // Seat pose arrives from the ridden RideSeat's useFrame (may lag one frame on boarding)
+      const anchor = rideState.anchor
+      if (rideState.id !== interaction.heldId || !anchor) {
+        if (++orphanFrames.current > 30) {
+          orphanFrames.current = 0
+          rb.setBodyType(rapier.RigidBodyType.Dynamic, true)
+          interaction.setHeldId(null)
+        }
+        return
+      }
+      orphanFrames.current = 0
+      if (Number.isNaN(lastSeatYaw.current) && rideState.faceYaw !== undefined) {
+        yaw.current = rideState.faceYaw
+        pitch.current = 0
+      }
+      anchor.updateWorldMatrix(true, false)
+      const seat = anchor.getWorldPosition(seatPos.current)
+      const seatYaw = seatEuler.current.setFromQuaternion(anchor.getWorldQuaternion(seatQuat.current)).y
+      // Body type is switched here, not via the RigidBody prop: a prop change makes
+      // @react-three/rapier reset the body to its stale object transform (back onto the seat).
+      if (rb.bodyType() !== rapier.RigidBodyType.KinematicPositionBased) {
+        rb.setBodyType(rapier.RigidBodyType.KinematicPositionBased, true)
+      }
+      if (!comfort.reduceMotion && !Number.isNaN(lastSeatYaw.current)) {
+        let d = seatYaw - lastSeatYaw.current
+        d = Math.atan2(Math.sin(d), Math.cos(d))
+        yaw.current += d
+      }
+      lastSeatYaw.current = seatYaw
+      if (controlsEnabled && input.interactPressed) {
+        // Dismount to the ride's exit point
+        const e = exitAt.current
+        rideState.exitFrom?.(seat, e)
+        rb.setBodyType(rapier.RigidBodyType.Dynamic, true)
+        rb.setTranslation({ x: e.x, y: e.y, z: e.z }, true)
+        rb.setLinvel({ x: 0, y: 0, z: 0 }, true)
+        camera.position.set(e.x, e.y + EYE_HEIGHT, e.z)
+        rideState.id = null
+        rideState.anchor = null
+        dismounted.current = interaction.heldId
+        lastSeatYaw.current = NaN
+        groundedFrames.current = 0
+        interaction.setHeldId(null)
+        return
+      }
+      rb.setNextKinematicTranslation({ x: seat.x, y: seat.y - 0.4, z: seat.z })
+      camera.position.set(seat.x, seat.y + SEATED_EYE, seat.z)
       camera.rotation.order = 'YXZ'
       camera.rotation.y = yaw.current
       camera.rotation.x = pitch.current
@@ -168,6 +257,7 @@ export function PlayerController({
         else interaction.setHeldId(focused.id)
       }
       if (focused.kind === 'ride') {
+        lastSeatYaw.current = NaN
         interaction.setHeldId(focused.id)
       }
     } else if (controlsEnabled && input.interactPressed && interaction.heldId) {
@@ -186,7 +276,6 @@ export function PlayerController({
       linearDamping={0.15}
       angularDamping={1}
       canSleep={false}
-      type={riding ? 'kinematicPosition' : 'dynamic'}
       ccd
       lockRotations
     >

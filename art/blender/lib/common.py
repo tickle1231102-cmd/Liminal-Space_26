@@ -47,8 +47,9 @@ def box(name, size, location, mat=None, parent=None):
     return obj
 
 
-def cylinder(name, radius, depth, location, mat=None, verts=12):
-    bpy.ops.mesh.primitive_cylinder_add(radius=radius, depth=depth, vertices=verts, location=location)
+def cylinder(name, radius, depth, location, mat=None, verts=12, capped=True):
+    bpy.ops.mesh.primitive_cylinder_add(radius=radius, depth=depth, vertices=verts, location=location,
+                                        end_fill_type="NGON" if capped else "NOTHING")
     obj = bpy.context.active_object
     obj.name = name
     if mat:

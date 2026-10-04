@@ -3,15 +3,64 @@ import { Suspense, useMemo, type ReactNode } from 'react'
 import { asphaltMap } from './procTextures'
 import { NeonBar } from './Atmosphere'
 import { GltfAnimated, GltfAsset, parkModel } from './GltfAsset'
+import { RideSeat } from '../objects/RideSeat'
+import type * as THREE from 'three'
+
+// Zone + ride placement (macro layout, never reseeded). Exits are world space.
+const ZONE: [number, number, number] = [0, 0, -42]
+const FERRIS: [number, number, number] = [-12, 0, -4]
+const CAROUSEL: [number, number, number] = [10, 0, 2]
+const CAROUSEL_EXIT_RADIUS = 5.4 // just outside the 4.75 m skirt
+
+/** Dismount radially off the carousel, beside where the horse currently is. */
+function carouselExit(seat: THREE.Vector3, out: THREE.Vector3) {
+  const cx = ZONE[0] + CAROUSEL[0]
+  const cz = ZONE[2] + CAROUSEL[2]
+  const dx = seat.x - cx
+  const dz = seat.z - cz
+  const k = CAROUSEL_EXIT_RADIUS / Math.max(0.001, Math.hypot(dx, dz))
+  out.set(cx + dx * k, 0.15, cz + dz * k)
+}
+
+/** Dismount onto the ferris boarding deck (deck is part of ferris_wheel.glb, in front of the wheel). */
+function ferrisExit(_seat: THREE.Vector3, out: THREE.Vector3) {
+  out.set(ZONE[0] + FERRIS[0], 0.35, ZONE[2] + FERRIS[2] + 2.1)
+}
+
+const CAROUSEL_SEATS = {
+  RideMount_0: (
+    <RideSeat
+      id="carousel-horse-0"
+      label="Carousel horse"
+      model={parkModel('carousel_horse')}
+      seat={[0, 0.25, 0]}
+      collider={[0.2, 0.45, 0.5]}
+      exitFrom={carouselExit}
+    />
+  ),
+}
+
+/** Each gondola (counter-rotated to stay level) seats one rider on its bench. */
+const GONDOLA_SEATS = Object.fromEntries(
+  Array.from({ length: 8 }, (_, i) => [
+    `Gondola_${i}`,
+    <RideSeat
+      key={i}
+      id={`ferris-gondola-${i}`}
+      label="Ferris gondola"
+      seat={[0, -1.25, 0]}
+      faceYaw={Math.PI} // look out toward the midway and plaza, not into the wheel frame
+      exitFrom={ferrisExit}
+    />,
+  ]),
+)
 
 type MidwayProps = {
   children?: ReactNode
-  /** Mounted on the turning carousel platform (Three local space of the carousel). */
-  carouselRiders?: ReactNode
 }
 
 /** Midway: ferris wheel + carousel landmarks (macro layout fixed). */
-export function MidwayZone({ children, carouselRiders }: MidwayProps) {
+export function MidwayZone({ children }: MidwayProps) {
   const asphalt = useMemo(() => asphaltMap(6), [])
 
   return (
@@ -53,11 +102,9 @@ export function MidwayZone({ children, carouselRiders }: MidwayProps) {
 
       <Suspense fallback={null}>
         {/* Ferris wheel — wheel spin + level gondolas baked in art/blender/park/ferris_wheel.py */}
-        <GltfAnimated url={parkModel('ferris_wheel')} position={[-12, 0, -4]} />
-        {/* Carousel — platform turn + horse bob baked in carousel.py; riders mount on "Platform" */}
-        <GltfAnimated url={parkModel('carousel')} position={[10, 0, 2]} mountNode="Platform">
-          {carouselRiders}
-        </GltfAnimated>
+        <GltfAnimated url={parkModel('ferris_wheel')} position={FERRIS} mounts={GONDOLA_SEATS} />
+        {/* Carousel — platform turn + horse bob baked in carousel.py; boardable horse on "RideMount_0" */}
+        <GltfAnimated url={parkModel('carousel')} position={CAROUSEL} mounts={CAROUSEL_SEATS} />
         {/* Ghost house facade */}
         <GltfAsset url={parkModel('ghost_house')} position={[0, 0, -12]} />
       </Suspense>

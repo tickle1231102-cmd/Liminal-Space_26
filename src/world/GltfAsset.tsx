@@ -1,8 +1,8 @@
-import { useAnimations, useGLTF } from '@react-three/drei'
-import { createPortal } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
+import { createPortal, useFrame } from '@react-three/fiber'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { useEffect, useMemo, type ReactNode } from 'react'
-import { Box3, Euler, Matrix4, Mesh, Quaternion, Vector3, type Object3D } from 'three'
+import { AnimationMixer, Box3, Euler, Matrix4, Mesh, Quaternion, Vector3, type Object3D } from 'three'
 
 // Runtime side of the Blender naming contract (art/blender/lib/common.py):
 //   COL_*    → hidden, converted to fixed Rapier cuboids
@@ -142,33 +142,35 @@ export function GltfVisual({ url }: { url: string }) {
 
 /**
  * Model with baked Blender animation: every clip loops via AnimationMixer.
- * `children` are mounted onto the node named `mountNode` so they ride along (e.g. carousel "Platform").
+ * `mounts` maps node names to content mounted on that node so it rides along (e.g. "Gondola_3").
  */
 export function GltfAnimated({
   url,
   position = [0, 0, 0],
   rotationY = 0,
-  mountNode,
-  children,
+  mounts,
 }: {
   url: string
   position?: [number, number, number]
   rotationY?: number
-  mountNode?: string
-  children?: ReactNode
+  mounts?: Record<string, ReactNode>
 }) {
   const { scene, animations } = useGLTF(url)
   const { root, colliders } = useMemo(() => {
     const root = scene.clone(true)
     return { root, ...extract(root) }
   }, [scene])
-  const { actions } = useAnimations(animations, root)
+  // Own mixer, advanced at priority -1: before default-priority callbacks (the player reads ride
+  // seats in its own useFrame, so the ride must already be at this frame's pose)
+  const mixer = useMemo(() => new AnimationMixer(root), [root])
   useEffect(() => {
-    const all = Object.values(actions)
-    all.forEach((a) => a?.reset().play())
-    return () => all.forEach((a) => a?.stop())
-  }, [actions])
-  const mount = useMemo(() => (mountNode ? root.getObjectByName(mountNode) : undefined), [root, mountNode])
+    animations.forEach((clip) => mixer.clipAction(clip).play())
+    return () => {
+      mixer.stopAllAction()
+      mixer.uncacheRoot(root)
+    }
+  }, [mixer, animations, root])
+  useFrame((_, dt) => mixer.update(dt), -1)
 
   return (
     <group position={position} rotation={[0, rotationY, 0]}>
@@ -180,7 +182,11 @@ export function GltfAnimated({
           ))}
         </RigidBody>
       )}
-      {mount && children ? createPortal(children, mount) : null}
+      {mounts &&
+        Object.entries(mounts).map(([name, content]) => {
+          const node = root.getObjectByName(name)
+          return node ? <group key={name}>{createPortal(content, node)}</group> : null
+        })}
     </group>
   )
 }
