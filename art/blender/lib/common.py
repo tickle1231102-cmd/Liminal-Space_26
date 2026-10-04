@@ -4,6 +4,7 @@ Naming contract with the runtime (src/world/GltfAsset.tsx):
   COL_*     box collider, hidden at runtime, becomes a Rapier cuboid
   ANCHOR_*  empty marking a prop spawn point for seeded placement
 """
+import os
 import sys
 import bpy
 
@@ -113,7 +114,100 @@ def key_bob(obj, frames, cycles, amplitude, phase=0.0, samples=48):
     obj.location.z = z0
 
 
-def export_glb(path, animated=False):
+def bake_shading(obj, size=512, samples=96, distance=0.6, ground=True):
+    """Bake albedo x ambient occlusion into one base-color atlas on a second UV set ("Bake").
+    Unlike an aoMap (ambient-only in three.js) this darkens contact areas under every light.
+    Transparent materials keep their flat color. A temporary ground plane adds floor contact."""
+    import numpy as np
+    scene = bpy.context.scene
+    scene.render.engine = "CYCLES"
+    scene.cycles.device = "CPU"
+    scene.render.bake.margin = 4
+    if scene.world is None:
+        scene.world = bpy.data.worlds.new("BakeWorld")
+    scene.world.light_settings.distance = distance
+
+    me = obj.data
+    uv = me.uv_layers.new(name="Bake")
+    me.uv_layers.active = uv
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.mode_set(mode="EDIT")
+    bpy.ops.mesh.select_all(action="SELECT")
+    bpy.ops.uv.smart_project(island_margin=0.03)
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    plane = None
+    if ground:
+        bpy.ops.mesh.primitive_plane_add(size=60, location=(0, 0, 0))
+        plane = bpy.context.active_object
+        bpy.ops.object.select_all(action="DESELECT")
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+
+    ao = bpy.data.images.new(f"{obj.name}_AO", size, size)
+    col = bpy.data.images.new(f"{obj.name}_Shade", size, size)
+    mats = [m for m in me.materials if m]
+    nodes = {}
+    for m in mats:
+        nt = m.node_tree
+        tex = nt.nodes.new("ShaderNodeTexImage")
+        uvn = nt.nodes.new("ShaderNodeUVMap")
+        uvn.uv_map = "Bake"
+        nt.links.new(uvn.outputs["UV"], tex.inputs["Vector"])
+        nt.nodes.active = tex
+        nodes[m.name] = tex
+
+    def bake(img, kind, **kw):
+        for t in nodes.values():
+            t.image = img
+        scene.cycles.samples = samples if kind == "AO" else 1
+        bpy.ops.object.bake(type=kind, **kw)
+
+    # Collider proxies enclose the visual parts; they must not occlude the bake
+    proxies = [o for o in scene.objects if o.name.startswith("COL_")]
+    for o in proxies:
+        o.hide_render = True
+    bake(ao, "AO")
+    bake(col, "DIFFUSE", pass_filter={"COLOR"})
+    for o in proxies:
+        o.hide_render = False
+    if plane:
+        bpy.data.objects.remove(plane, do_unlink=True)
+
+    dbg = os.environ.get("BAKE_DEBUG_DIR")
+    if dbg:
+        for img in (ao, col):
+            img.filepath_raw = os.path.join(dbg, img.name + ".png")
+            img.file_format = "PNG"
+            img.save()
+    a = np.array(ao.pixels[:]).reshape(-1, 4)
+    c = np.array(col.pixels[:]).reshape(-1, 4)
+    c[:, :3] *= a[:, :1] * 0.8 + 0.2   # keep some fill in crevices
+    c[:, 3] = 1.0
+    col.pixels[:] = c.ravel()
+    col.file_format = "JPEG"
+    col.pack()
+
+    for m in mats:
+        nt = m.node_tree
+        tex = nodes[m.name]
+        bsdf = nt.nodes["Principled BSDF"]
+        if m.blend_method == "BLEND" or bsdf.inputs["Alpha"].default_value < 1:
+            nt.nodes.remove(tex)
+            continue
+        tex.image = col
+        nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    bpy.data.images.remove(ao)
+    return col
+
+
+def export_glb(path, animated=False, bake=True, bake_size=512):
+    if bake and not animated:
+        visual = [o for o in bpy.context.scene.objects if o.type == "MESH" and not o.name.startswith("COL_")]
+        if len(visual) == 1:  # join_visual'd static model: one atlas
+            bake_shading(visual[0], size=bake_size)
     bpy.ops.export_scene.gltf(
         filepath=path,
         export_animations=animated,
@@ -124,6 +218,8 @@ def export_glb(path, animated=False):
         export_extras=True,
         export_cameras=False,
         export_lights=False,
+        export_image_format="JPEG",
+        export_jpeg_quality=85,
     )
     print(f"[asset] wrote {path}")
 

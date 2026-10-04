@@ -64,6 +64,8 @@ npm run assets:build         # 전체 재생성 (특정 모델만: npm run asset
 npm run assets:watch         # 스크립트 저장 시 자동 재생성
 ```
 
+빌드는 정적 모델에 그림자(albedo × AO)를 Cycles로 구워 넣고(`bake_shading`), meshopt로 압축합니다(`EXT_meshopt_compression`). 전체 재생성은 약 2분 걸립니다.
+
 Blender 경로가 기본 위치가 아니면 `BLENDER=/path/to/blender` 환경변수를 지정하세요. 이름 규칙: `COL_*` = 충돌 박스(화면에서 숨김), `ANCHOR_*` = 소품 배치 지점.
 
 ## 문서
