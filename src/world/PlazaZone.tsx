@@ -1,51 +1,58 @@
 import { MeshReflectorMaterial } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { useMemo, type ReactNode } from 'react'
-import { asphaltMap, concreteMap, neonSignTexture, roughnessNoise } from './procTextures'
+import { Suspense, useMemo, type ReactNode } from 'react'
+import { asphaltMap, neonSignTexture, roughnessNoise } from './procTextures'
 import { NeonBar } from './Atmosphere'
+import { GltfAsset, GltfInstances, parkModel } from './GltfAsset'
 
-function Solid({
-  position,
-  size,
-  color,
-  metalness = 0.08,
-  roughness = 0.82,
-  emissive,
-  emissiveIntensity = 0,
-}: {
-  position: [number, number, number]
-  size: [number, number, number]
-  color: string
-  metalness?: number
-  roughness?: number
-  emissive?: string
-  emissiveIntensity?: number
-}) {
+const BOLLARDS: [number, number, number][] = [-34, -28, -22, -16, -10, -4, 2, 8, 14].flatMap((z) =>
+  [-3.9, 3.9].map((x): [number, number, number] => [x, 0, z]),
+)
+
+const FENCE_PANEL = 2 // must match W in art/blender/park/fence_panel.py
+
+/** Straight fence line from (x,z) to (x,z): instanced 2 m panels, stretched to fit, one collider. */
+function FenceRun({ from, to }: { from: [number, number]; to: [number, number] }) {
+  const { items, center, half, rotationY } = useMemo(() => {
+    const [dx, dz] = [to[0] - from[0], to[1] - from[1]]
+    const len = Math.hypot(dx, dz)
+    const n = Math.max(1, Math.round(len / FENCE_PANEL))
+    const rotationY = -Math.atan2(dz, dx)
+    const items = Array.from({ length: n }, (_, i) => {
+      const t = (i + 0.5) / n
+      return {
+        position: [from[0] + dx * t, 0, from[1] + dz * t] as [number, number, number],
+        rotationY,
+        scale: [len / n / FENCE_PANEL, 1, 1] as [number, number, number],
+      }
+    })
+    return {
+      items,
+      center: [(from[0] + to[0]) / 2, 1.15, (from[1] + to[1]) / 2] as [number, number, number],
+      half: [len / 2, 1.15, 0.14] as [number, number, number],
+      rotationY,
+    }
+  }, [from, to])
   return (
-    <RigidBody type="fixed" colliders="cuboid" position={position}>
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={size} />
-        <meshStandardMaterial
-          color={color}
-          metalness={metalness}
-          roughness={roughness}
-          emissive={emissive ?? '#000'}
-          emissiveIntensity={emissiveIntensity}
-        />
-      </mesh>
-    </RigidBody>
+    <>
+      <GltfInstances url={parkModel('fence_panel')} items={items} />
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={half} position={center} rotation={[0, rotationY, 0]} />
+      </RigidBody>
+    </>
   )
 }
 
 export function PlazaZone({ children }: { children?: ReactNode }) {
   const asphalt = useMemo(() => asphaltMap(10), [])
-  const concrete = useMemo(() => concreteMap(3), [])
   const rough = useMemo(() => roughnessNoise(8), [])
   const sign = useMemo(() => neonSignTexture('OPEN', '#140818', '#ff6ad5'), [])
   const sign2 = useMemo(() => neonSignTexture('TICKETS', '#0a1218', '#5ec8e8'), [])
+  const signMidway = useMemo(() => neonSignTexture('MIDWAY', '#061018', '#5ec8e8'), [])
 
   return (
     <group name="plaza">
+      <Suspense fallback={null}>
       {/* Explicit ground collider — do not rely on invisible mesh alone */}
       <RigidBody type="fixed" colliders={false} position={[0, 0, 0]}>
         <CuboidCollider args={[40, 0.5, 40]} position={[0, -0.5, 0]} friction={1.2} restitution={0} />
@@ -71,33 +78,8 @@ export function PlazaZone({ children }: { children?: ReactNode }) {
         />
       </mesh>
 
-      {/* Ticket booth body */}
-      <Solid position={[-10, 1.35, -8]} size={[4.6, 2.7, 3.4]} color="#2e3648" roughness={0.75} />
-      {/* Counter window glow */}
-      <mesh position={[-8.65, 1.55, -8]} castShadow>
-        <boxGeometry args={[0.08, 1.1, 1.8]} />
-        <meshStandardMaterial
-          color="#ffe6b8"
-          emissive="#ffc07a"
-          emissiveIntensity={1.4}
-          toneMapped={false}
-        />
-      </mesh>
-      {/* Awning */}
-      <mesh position={[-10, 2.85, -6.9]} castShadow>
-        <boxGeometry args={[5.4, 0.12, 1.6]} />
-        <meshStandardMaterial color="#c45c6a" roughness={0.55} metalness={0.1} />
-      </mesh>
-      <mesh position={[-10, 3.15, -8]} castShadow>
-        <boxGeometry args={[5.0, 0.45, 3.8]} />
-        <meshStandardMaterial
-          map={concrete}
-          color="#d07080"
-          roughness={0.55}
-          emissive="#401018"
-          emissiveIntensity={0.25}
-        />
-      </mesh>
+      {/* Ticket booth (art/blender/park/ticket_booth.py) */}
+      <GltfAsset url={parkModel('ticket_booth')} position={[-10, 0, -8]} />
       {/* Neon signs */}
       <mesh position={[-10, 3.9, -6.2]}>
         <planeGeometry args={[2.2, 0.7]} />
@@ -121,53 +103,13 @@ export function PlazaZone({ children }: { children?: ReactNode }) {
       </mesh>
       <NeonBar position={[-10, 3.55, -6.25]} color="#ff6ad5" size={[2.6, 0.06, 0.06]} />
 
-      {/* Fountain */}
-      <RigidBody type="fixed" colliders="cuboid" position={[0, 0.28, 0]}>
-        <mesh castShadow receiveShadow>
-          <cylinderGeometry args={[2.6, 3.0, 0.55, 48]} />
-          <meshStandardMaterial map={concrete} color="#7a889c" roughness={0.45} metalness={0.25} />
-        </mesh>
-      </RigidBody>
-      <mesh position={[0, 0.58, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.1, 2.35, 48]} />
-        <meshStandardMaterial
-          color="#4a90a8"
-          transparent
-          opacity={0.55}
-          metalness={0.8}
-          roughness={0.15}
-          emissive="#1a4058"
-          emissiveIntensity={0.35}
-        />
-      </mesh>
-      <mesh position={[0, 0.56, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[1.05, 48]} />
-        <meshStandardMaterial
-          color="#6eb8d0"
-          transparent
-          opacity={0.4}
-          metalness={0.9}
-          roughness={0.05}
-          emissive="#2a6080"
-          emissiveIntensity={0.5}
-          toneMapped={false}
-        />
-      </mesh>
-      <mesh position={[0, 1.25, 0]} castShadow>
-        <cylinderGeometry args={[0.28, 0.4, 1.5, 16]} />
-        <meshStandardMaterial color="#8a9bb0" metalness={0.55} roughness={0.35} />
-      </mesh>
-      <mesh position={[0, 2.05, 0]}>
-        <sphereGeometry args={[0.35, 24, 24]} />
-        <meshStandardMaterial
-          color="#c8d8e8"
-          metalness={0.7}
-          roughness={0.2}
-          emissive="#88aacc"
-          emissiveIntensity={0.4}
-        />
-      </mesh>
+      {/* Fountain (art/blender/park/fountain.py) */}
+      <GltfAsset url={parkModel('fountain')} />
       <pointLight position={[0, 2.3, 0]} intensity={4} distance={10} color="#9ed0ff" />
+
+      {/* Benches (art/blender/park/bench.py) */}
+        <GltfAsset url={parkModel('bench')} position={[4.2, 0, 4.2]} rotationY={-Math.PI / 4} />
+        <GltfAsset url={parkModel('bench')} position={[-4.2, 0, 4.2]} rotationY={Math.PI / 4} />
 
       {/* Lamp posts */}
       {[
@@ -177,87 +119,92 @@ export function PlazaZone({ children }: { children?: ReactNode }) {
         [8, -2],
       ].map(([x, z], i) => (
         <group key={i} position={[x, 0, z]}>
-          <mesh position={[0, 1.6, 0]} castShadow>
-            <cylinderGeometry args={[0.07, 0.1, 3.2, 8]} />
-            <meshStandardMaterial color="#2a3140" metalness={0.6} roughness={0.4} />
-          </mesh>
-          <mesh position={[0, 3.35, 0]}>
-            <sphereGeometry args={[0.22, 16, 16]} />
-            <meshStandardMaterial
-              color="#ffe0a8"
-              emissive="#ffc07a"
-              emissiveIntensity={2.2}
-              toneMapped={false}
-            />
-          </mesh>
+          <GltfAsset url={parkModel('lamp_post')} />
           <pointLight position={[0, 3.3, 0]} intensity={9} distance={16} color="#ffd8a0" />
         </group>
       ))}
 
-      {/* Perimeter fences with posts */}
-      {([-28, 28] as const).map((z) => (
-        <Solid key={`fz${z}`} position={[0, 1.15, z]} size={[56, 2.3, 0.28]} color="#1c2230" metalness={0.35} roughness={0.55} />
-      ))}
-      {([-28, 28] as const).map((x) => (
-        <Solid key={`fx${x}`} position={[x, 1.15, 0]} size={[0.28, 2.3, 56]} color="#1c2230" metalness={0.35} roughness={0.55} />
-      ))}
-      <NeonBar position={[0, 2.4, -27.8]} color="#5ec8e8" size={[12, 0.05, 0.05]} />
+      {/* Perimeter fences — south side opens onto the gate toward midway / ferris */}
+      <FenceRun from={[-28, 28]} to={[28, 28]} />
+      <FenceRun from={[-28, -28]} to={[-5.05, -28]} />
+      <FenceRun from={[5.05, -28]} to={[28, -28]} />
+      <FenceRun from={[-28, -28]} to={[-28, 28]} />
+      <FenceRun from={[28, -28]} to={[28, 28]} />
 
-      {/* Path to midway — brighter lane + edge lights */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 2]} receiveShadow>
-        <planeGeometry args={[6.2, 36]} />
+      {/* Gate arch (art/blender/park/gate_arch.py); neon + sign stay in code */}
+      <GltfAsset url={parkModel('gate_arch')} position={[0, 0, -28]} />
+      <NeonBar position={[0, 3.65, -27.7]} color="#5ec8e8" size={[9.5, 0.08, 0.08]} />
+      <NeonBar position={[-4.8, 2.2, -27.7]} color="#ff6ad5" size={[0.08, 2.4, 0.08]} rotation={[0, 0, 0]} />
+      <NeonBar position={[4.8, 2.2, -27.7]} color="#ff6ad5" size={[0.08, 2.4, 0.08]} />
+      <mesh position={[0, 3.95, -27.65]}>
+        <planeGeometry args={[3.2, 0.55]} />
         <meshStandardMaterial
-          map={asphalt}
-          color="#6a758c"
-          roughness={0.78}
-          metalness={0.08}
-          emissive="#2a3348"
-          emissiveIntensity={0.15}
+          map={signMidway}
+          emissiveMap={signMidway}
+          emissive="#ffffff"
+          emissiveIntensity={1.15}
+          toneMapped={false}
         />
       </mesh>
-      {/* Center dashed guide */}
-      {[-8, -4, 0, 4, 8, 12].map((z) => (
+      <pointLight position={[0, 3.2, -26]} intensity={14} distance={18} color="#7ad8f0" decay={2} />
+
+      {/* Path spawn → gate → midway (ferris) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, -8]} receiveShadow>
+        <planeGeometry args={[7.2, 56]} />
+        <meshStandardMaterial
+          map={asphalt}
+          color="#7a869c"
+          roughness={0.72}
+          metalness={0.06}
+          emissive="#3a4558"
+          emissiveIntensity={0.22}
+        />
+      </mesh>
+      {/* Center dashed guide all the way to midway */}
+      {[-36, -30, -24, -18, -12, -6, 0, 6, 12].map((z) => (
         <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.055, z]}>
-          <planeGeometry args={[0.35, 1.4]} />
+          <planeGeometry args={[0.4, 1.6]} />
           <meshStandardMaterial
             color="#ffe6a8"
             emissive="#ffc06a"
-            emissiveIntensity={0.85}
+            emissiveIntensity={1.1}
             toneMapped={false}
           />
         </mesh>
       ))}
       {/* Path edge strips */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.05, 0.05, 2]}>
-        <planeGeometry args={[0.18, 36]} />
-        <meshStandardMaterial color="#ffd28a" emissive="#ffb86a" emissiveIntensity={1.1} toneMapped={false} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-3.5, 0.05, -8]}>
+        <planeGeometry args={[0.22, 56]} />
+        <meshStandardMaterial color="#ffd28a" emissive="#ffb86a" emissiveIntensity={1.35} toneMapped={false} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.05, 0.05, 2]}>
-        <planeGeometry args={[0.18, 36]} />
-        <meshStandardMaterial color="#ffd28a" emissive="#ffb86a" emissiveIntensity={1.1} toneMapped={false} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3.5, 0.05, -8]}>
+        <planeGeometry args={[0.22, 56]} />
+        <meshStandardMaterial color="#ffd28a" emissive="#ffb86a" emissiveIntensity={1.35} toneMapped={false} />
       </mesh>
-      {/* Path bollard lights */}
-      {[-10, -5, 0, 5, 10, 15].map((z) =>
-        ([-3.4, 3.4] as const).map((x) => (
-          <group key={`${x}-${z}`} position={[x, 0, z]}>
-            <mesh position={[0, 0.45, 0]}>
-              <cylinderGeometry args={[0.06, 0.08, 0.9, 8]} />
-              <meshStandardMaterial color="#3a4254" metalness={0.5} roughness={0.4} />
-            </mesh>
-            <mesh position={[0, 0.95, 0]}>
-              <sphereGeometry args={[0.12, 12, 12]} />
-              <meshStandardMaterial
-                color="#ffe8c0"
-                emissive="#ffd090"
-                emissiveIntensity={2.5}
-                toneMapped={false}
-              />
-            </mesh>
-            <pointLight position={[0, 1, 0]} intensity={4.5} distance={8} color="#ffe0b0" decay={2} />
-          </group>
-        )),
-      )}
+      {/* Chevron arrows on path (point toward -Z / ferris) */}
+      {[-32, -20, -10, 2].map((z) => (
+        <group key={`chev-${z}`} position={[0, 0.06, z]}>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -0.35]}>
+            <planeGeometry args={[1.1, 0.35]} />
+            <meshStandardMaterial color="#5ec8e8" emissive="#5ec8e8" emissiveIntensity={1.4} toneMapped={false} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, Math.PI / 4]} position={[-0.35, 0, 0.15]}>
+            <planeGeometry args={[0.7, 0.28]} />
+            <meshStandardMaterial color="#5ec8e8" emissive="#5ec8e8" emissiveIntensity={1.4} toneMapped={false} />
+          </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, -Math.PI / 4]} position={[0.35, 0, 0.15]}>
+            <planeGeometry args={[0.7, 0.28]} />
+            <meshStandardMaterial color="#5ec8e8" emissive="#5ec8e8" emissiveIntensity={1.4} toneMapped={false} />
+          </mesh>
+        </group>
+      ))}
+      {/* Path bollard lights through gate */}
+      <GltfInstances url={parkModel('bollard')} items={BOLLARDS.map((p) => ({ position: p }))} />
+      {BOLLARDS.map(([x, , z]) => (
+        <pointLight key={`${x}-${z}`} position={[x, 1, z]} intensity={4.5} distance={8} color="#ffe0b0" decay={2} />
+      ))}
 
+      </Suspense>
       {children}
     </group>
   )

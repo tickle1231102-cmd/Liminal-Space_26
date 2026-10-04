@@ -27,3 +27,9 @@ android/local.properties
 # Perf / logs
 perf-reports/
 *.log
+.dev-server.pid
+.dev-server.log
+
+# Blender asset build
+__pycache__/
+*.blend1

@@ -17,7 +17,22 @@ npm install
 npm run dev
 ```
 
-브라우저에서 클릭해 입장합니다.
+브라우저: [http://127.0.0.1:5173/](http://127.0.0.1:5173/) — 클릭해 입장합니다.
+
+### 개발 서버가 자꾸 꺼질 때
+
+Vite 개발 서버는 **터미널에 붙어 있는 프로세스**입니다. 터미널 탭을 닫거나 Cursor/맥이 재시작되면 같이 종료됩니다. `5173` 포트에 예전 프로세스가 남아 있으면 새로 켤 때 `EADDRINUSE`로 실패하기도 합니다.
+
+| 명령 | 용도 |
+|---|---|
+| `npm run dev` | 이미 켜져 있으면 URL만 안내 (중복 실행 방지) |
+| `npm run dev:restart` | 예전 서버 종료 후 다시 시작 |
+| `npm run dev:bg` | 백그라운드 실행 (터미널 닫아도 유지) |
+| `npm run dev:stop` | 백그라운드/남은 서버 종료 |
+| `npm run dev:status` | 실행 중인지 확인 |
+| `npm run dev:fix` | 멈춘 서버 강제 복구 후 백그라운드 재시작 |
+
+화면이 하얗게/검게 멈추면 대부분 **서버가 포트만 잡고 HTTP가 죽은 상태**입니다. 그때는 `npm run dev:fix` 한 뒤 [http://127.0.0.1:5173/](http://127.0.0.1:5173/) 을 새로고침하세요.
 
 | 입력 | 동작 |
 |---|---|
@@ -39,6 +54,17 @@ npm run perf:report          # 성능 체크포인트 템플릿
 npm run electron:dev         # Electron 셸 (dev 서버 필요)
 npm run cap:sync             # Capacitor 동기화 (빌드 후)
 ```
+
+### 3D 모델 (Blender)
+
+모델은 `art/blender/<zone>/<name>.py` Python 스크립트가 원본입니다. Blender(5.x)를 화면 없이 실행해 `public/assets/models/<zone>/<name>.glb`를 만듭니다. 생성된 `.glb`도 커밋하므로 웹/모바일/스팀 빌드에는 Blender가 필요 없습니다.
+
+```bash
+npm run assets:build         # 전체 재생성 (특정 모델만: npm run assets:build -- bench)
+npm run assets:watch         # 스크립트 저장 시 자동 재생성
+```
+
+Blender 경로가 기본 위치가 아니면 `BLENDER=/path/to/blender` 환경변수를 지정하세요. 이름 규칙: `COL_*` = 충돌 박스(화면에서 숨김), `ANCHOR_*` = 소품 배치 지점.
 
 ## 문서
 

@@ -4,6 +4,7 @@ export type InputSnapshot = {
   move: MoveAxes
   lookDelta: MoveAxes
   sprint: boolean
+  jumpPressed: boolean
   interactPressed: boolean
   reseedPressed: boolean
   pointerLocked: boolean
@@ -13,6 +14,7 @@ type InternalState = {
   keys: Set<string>
   lookDelta: MoveAxes
   touchMove: MoveAxes
+  jumpPressed: boolean
   interactPressed: boolean
   reseedPressed: boolean
   pointerLocked: boolean
@@ -25,6 +27,7 @@ const state: InternalState = {
   keys: new Set(),
   lookDelta: { x: 0, y: 0 },
   touchMove: { x: 0, y: 0 },
+  jumpPressed: false,
   interactPressed: false,
   reseedPressed: false,
   pointerLocked: false,
@@ -57,6 +60,10 @@ export function pressInteract(): void {
   state.interactPressed = true
 }
 
+export function pressJump(): void {
+  state.jumpPressed = true
+}
+
 export function pressReseed(): void {
   state.reseedPressed = true
 }
@@ -68,9 +75,14 @@ export function clearLookDelta(): void {
 
 export function bindDesktopInput(target: HTMLElement = document.body): () => void {
   const onKeyDown = (e: KeyboardEvent) => {
+    if (e.repeat) return
     state.keys.add(e.code)
     if (e.code === 'KeyE') state.interactPressed = true
     if (e.code === 'KeyR') state.reseedPressed = true
+    if (e.code === 'Space') {
+      e.preventDefault()
+      state.jumpPressed = true
+    }
   }
   const onKeyUp = (e: KeyboardEvent) => {
     state.keys.delete(e.code)
@@ -138,13 +150,16 @@ export function sampleInput(): InputSnapshot {
 
   const interactPressed = state.interactPressed
   const reseedPressed = state.reseedPressed
+  const jumpPressed = state.jumpPressed
   state.interactPressed = false
   state.reseedPressed = false
+  state.jumpPressed = false
 
   return {
     move: { x, y },
     lookDelta: look,
     sprint: state.keys.has('ShiftLeft') || state.keys.has('ShiftRight'),
+    jumpPressed,
     interactPressed,
     reseedPressed,
     pointerLocked: state.pointerLocked,

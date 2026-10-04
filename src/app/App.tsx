@@ -7,6 +7,7 @@ import {
   type ComfortSettings,
 } from './comfort'
 import { detectPlatform, isTouchPrimary } from './platform'
+import { loadScene, saveScene, type SceneId } from './scene'
 import {
   bindDesktopInput,
   pressReseed,
@@ -18,6 +19,8 @@ export function App() {
   const [started, setStarted] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [comfort, setComfort] = useState<ComfortSettings>(() => loadComfortSettings())
+  const [scene, setScene] = useState<SceneId>(() => loadScene())
+  const [pointerLocked, setPointerLocked] = useState(false)
   const platform = detectPlatform()
   const touch = isTouchPrimary()
 
@@ -27,8 +30,32 @@ export function App() {
   }, [comfort])
 
   useEffect(() => {
+    saveScene(scene)
+  }, [scene])
+
+  useEffect(() => {
     if (!started || touch) return
     return bindDesktopInput(document.body)
+  }, [started, touch])
+
+  // Esc로 풀린 포인터 락을 화면 클릭으로 다시 잡는다 (버튼 클릭은 제외).
+  useEffect(() => {
+    if (!started || touch) return
+
+    const onLockChange = () => setPointerLocked(document.pointerLockElement != null)
+    const onClick = (e: MouseEvent) => {
+      if (document.pointerLockElement) return
+      if ((e.target as HTMLElement | null)?.closest('button')) return
+      requestPointerLock(document.body)
+    }
+
+    onLockChange()
+    document.addEventListener('pointerlockchange', onLockChange)
+    document.addEventListener('click', onClick)
+    return () => {
+      document.removeEventListener('pointerlockchange', onLockChange)
+      document.removeEventListener('click', onClick)
+    }
   }, [started, touch])
 
   useEffect(() => {
@@ -64,7 +91,13 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <GameCanvas comfort={comfort} audioEnabled={audioEnabled} started={started} />
+      <GameCanvas
+        key={scene}
+        comfort={comfort}
+        audioEnabled={audioEnabled}
+        started={started}
+        scene={scene}
+      />
       <TouchControls enabled={started} />
 
       {!started && (
@@ -78,19 +111,56 @@ export function App() {
           }}
         >
           <div className="hud-overlay-card">
-            <h1>After Hours</h1>
-            <p>폐장하지 않은 야간 놀이공원. 목표도 대사도 없다.</p>
-            <p>클릭하면 입장 — 뒤 광장·네온·분수 반영이 보여야 정상입니다.</p>
-            <p>
-              {touch
-                ? '탭해서 입장 — 왼쪽 스틱 이동, 오른쪽 드래그 시점'
-                : 'WASD 이동 · 마우스 시점 · E 상호작용 · R 재시드'}
-            </p>
+            <h1>{scene === 'school' ? 'After Hours — 심야 학교' : 'After Hours'}</h1>
+            {scene === 'school' ? (
+              <>
+                <p>야자 시간이 끝나지 않은 학교. 형광등은 그대로 켜져 있다.</p>
+                <p>현관에서 시작해 중앙 복도로, 급식실과 강당·방송실로 이어집니다.</p>
+                <p>
+                  {touch
+                    ? '탭해서 입장 — 스틱 이동 · 드래그 시점 · JUMP / E'
+                    : 'WASD 이동 · Space 점프 · 마우스 시점 · E 밀기/끌기 · R 재시드'}
+                </p>
+              </>
+            ) : (
+              <>
+                <p>폐장하지 않은 야간 놀이공원. 목표도 대사도 없다.</p>
+                <p>빛나는 길을 따라가면 관람차(MIDWAY) 게이트로 이어집니다.</p>
+                <p>
+                  {touch
+                    ? '탭해서 입장 — 스틱 이동 · 드래그 시점 · JUMP / E'
+                    : 'WASD 이동 · Space 점프 · 마우스 시점 · E 상호작용 · R 재시드'}
+                </p>
+              </>
+            )}
+            <button
+              type="button"
+              style={{
+                marginTop: '0.4rem',
+                background: 'transparent',
+                color: 'rgba(232,228,216,0.7)',
+                border: '1px solid rgba(232,228,216,0.22)',
+                padding: '0.35rem 0.7rem',
+                fontSize: '0.72rem',
+                letterSpacing: '0.08em',
+                cursor: 'pointer',
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                setScene((s) => (s === 'school' ? 'park' : 'school'))
+              }}
+            >
+              {scene === 'school' ? '놀이공원 프로토타입으로' : '심야 학교로'}
+            </button>
             <p style={{ opacity: 0.45, fontSize: '0.8rem' }}>
               platform: {platform} · [ ] FOV · M reduce motion · F3 FPS
             </p>
           </div>
         </div>
+      )}
+
+      {started && !touch && !pointerLocked && (
+        <div className="hud-resume">클릭해서 조작 복귀 · Esc로 해제</div>
       )}
 
       {started && (

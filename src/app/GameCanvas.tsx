@@ -29,22 +29,27 @@ import type { ComfortSettings } from '../app/comfort'
 import { PerfSampler } from '../app/PerfHud'
 import { Crosshair } from '../app/Hud'
 import { useInteraction } from '../player/InteractionContext'
+import { SchoolWorld, SCHOOL_SPAWN } from '../world/school/SchoolWorld'
+import type { SceneId } from './scene'
 
 type GameSceneProps = {
   comfort: ComfortSettings
   audioEnabled: boolean
   started: boolean
+  scene: SceneId
 }
 
 function WorldContent({
   comfort,
   audioEnabled,
   started,
+  scene,
   onReseed,
 }: {
   comfort: ComfortSettings
   audioEnabled: boolean
   started: boolean
+  scene: SceneId
   onReseed: () => void
 }) {
   const tint = useBalloonTint('plaza')
@@ -57,6 +62,34 @@ function WorldContent({
   }, [])
 
   const chroma = useMemo(() => new THREE.Vector2(0.0006, 0.0006), [])
+
+  if (scene === 'school') {
+    return (
+      <>
+        <SchoolWorld reduceMotion={comfort.reduceMotion} audioEnabled={audioEnabled} />
+        <PlayerController
+          spawn={SCHOOL_SPAWN}
+          comfort={comfort}
+          onReseed={onReseed}
+          controlsEnabled={started}
+        />
+        {!comfort.reduceMotion && (
+          <EffectComposer multisampling={0} enableNormalPass={false}>
+            <SMAA />
+            <Bloom
+              intensity={0.22}
+              luminanceThreshold={0.8}
+              luminanceSmoothing={0.35}
+              mipmapBlur
+            />
+            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.06} />
+            <Vignette offset={0.35} darkness={0.34} />
+          </EffectComposer>
+        )}
+        <PerfSampler visible={comfort.showFps} />
+      </>
+    )
+  }
 
   return (
     <>
@@ -117,7 +150,7 @@ function WorldContent({
   )
 }
 
-export function GameCanvas({ comfort, audioEnabled, started }: GameSceneProps) {
+export function GameCanvas({ comfort, audioEnabled, started, scene }: GameSceneProps) {
   const [seed, setSeed] = useState('after-hours-proto')
   const [generation, setGeneration] = useState(0)
 
@@ -137,25 +170,31 @@ export function GameCanvas({ comfort, audioEnabled, started }: GameSceneProps) {
         <Canvas
           shadows={!comfort.reduceMotion}
           dpr={comfort.reduceMotion ? [1, 1.25] : [1, 1.85]}
-          camera={{ fov: comfort.fov, near: 0.1, far: 140, position: [0, 1.7, 12] }}
+          camera={{
+            fov: comfort.fov,
+            near: 0.1,
+            far: 140,
+            position: scene === 'school' ? [0, 1.7, 18] : [0, 1.7, 12],
+          }}
           gl={{
             antialias: !comfort.reduceMotion,
             powerPreference: 'high-performance',
           }}
           onCreated={({ gl }) => {
-            gl.setClearColor('#07090f')
+            gl.setClearColor(scene === 'school' ? '#0b0e14' : '#07090f')
             gl.toneMapping = THREE.ACESFilmicToneMapping
-            gl.toneMappingExposure = 1.45
+            gl.toneMappingExposure = scene === 'school' ? 1.15 : 1.45
             gl.shadowMap.enabled = !comfort.reduceMotion
             gl.shadowMap.type = THREE.PCFSoftShadowMap
           }}
         >
-          <Suspense fallback={null}>
+          <Suspense fallback={<BootPlaceholder />}>
             <Physics gravity={[0, -9.81, 0]} colliders={false}>
               <WorldContent
                 comfort={comfort}
                 audioEnabled={audioEnabled}
                 started={started}
+                scene={scene}
                 onReseed={reseed}
               />
             </Physics>
@@ -165,6 +204,16 @@ export function GameCanvas({ comfort, audioEnabled, started }: GameSceneProps) {
         <InteractPrompt />
       </InteractionProvider>
     </WorldSeedContext.Provider>
+  )
+}
+
+/** Visible while Rapier WASM / heavy scene chunks resolve — avoids a blank canvas. */
+function BootPlaceholder() {
+  return (
+    <mesh position={[0, 1.2, 0]}>
+      <boxGeometry args={[0.6, 0.6, 0.6]} />
+      <meshBasicMaterial color="#5ec8e8" wireframe />
+    </mesh>
   )
 }
 

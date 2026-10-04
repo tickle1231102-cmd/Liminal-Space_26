@@ -17,12 +17,12 @@
    - 물리: Rapier (`@react-three/rapier`)
    - 후처리: `@react-three/postprocessing`
    - 오디오: Howler.js + Web Audio API
-   - 애니메이션 재생: glTF 임포트 + Three.js `AnimationMixer` (리깅은 Blender에서 1회 작업)
+   - 애니메이션 재생: glTF 임포트 + Three.js `AnimationMixer` (리깅·애니메이션도 `art/blender` 스크립트로 작성)
    - 절차적 배치: 시드 기반 RNG (`seedrandom`) — 재현 가능해야 함
    - 모바일 배포: Capacitor
    - 데스크톱(Steam) 배포: Electron
 4. **폴백은 Godot(GDScript/C#) 하나만 고려한다.** 모바일 WebView 성능이 프로토타입 체크포인트에서 기준 미달일 경우에만 전환을 검토하며, 검토 없이 임의 전환하지 않는다.
-5. **3D 모델링/텍스처링, 사운드 원본 녹음은 코드 작업 범위 밖이다.** Blender 작업물 또는 라이선스가 명확한 에셋(Kenney, Poly Haven, Sketchfab, Freesound 등)만 사용한다. 출처 불명 에셋을 임의로 추가하지 않는다.
+5. **3D 모델링은 Blender 헤드리스 Python 스크립트로 작성한다.** `art/blender/<zone>/<name>.py`가 원본이고, `npm run assets:build`(Blender `-b -P`)로 `public/assets/models/<zone>/<name>.glb`를 생성한다. `.blend` 바이너리를 원본으로 두지 않는다. 이름 규칙: `COL_*` 메시 = 런타임에서 숨기고 Rapier 큐보이드로 변환, `ANCHOR_*` 엠티 = 시드 배치용 스폰 포인트(`src/world/GltfAsset.tsx`). 외부 에셋은 라이선스가 명확한 것(Kenney, Poly Haven, Sketchfab, Freesound 등)만 쓰고 `public/assets/ATTRIBUTION.md`에 기록한다. 사운드 원본 녹음은 코드 작업 범위 밖이다.
 6. **배포 대상은 App Store(iOS), Google Play(Android), Steam(Win/Mac) 세 곳 동시 출시가 목표다.** 기능/UI 설계 시 세 스토어의 입력 방식(터치 vs. WASD+마우스)과 심사 요건(개인정보 라벨, IARC 등급, Steamworks 연령 게이트)을 모두 고려한다. 한 플랫폼만 고려한 설계 변경은 피한다.
 
 ## 게임 디자인 원칙 (변경 시 PRD.md와 함께 갱신)
@@ -47,7 +47,9 @@
 - `docs/STORE_CHECKLIST.md` — 3스토어 출시 체크리스트
 - `src/app` — 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지
 - `src/player` — 1인칭 컨트롤러, 상호작용
-- `src/world` — 구역 화이트박스(정문·미드웨이·먹거리·백스테이지), 파편, 절차적 소품
+- `src/world` — 구역 배치(정문·미드웨이·먹거리·백스테이지), 파편, 절차적 소품. 기본 도형 화이트박스를 `GltfAsset`으로 단계적으로 교체 중
+- `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<zone>/<name>.py`) → `npm run assets:build` → `public/assets/models`
+- `src/world/school` — 심야 학교(PRD 12절) 구역: 현관·신발장, 중앙 복도·계단, 급식실, 강당·방송실. `src/app/scene.ts`의 씬 스위치로 놀이공원(기본값)과 전환한다(`?scene=school`).
 - `src/objects` — 풍선·탑승 시트 등 물리 오브젝트
 - `src/audio` — 피치 워블 / 앰비언스
 - `src/proc` — seedrandom 기반 재시드

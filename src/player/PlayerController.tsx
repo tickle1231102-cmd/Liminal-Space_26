@@ -13,6 +13,7 @@ import type { ComfortSettings } from '../app/comfort'
 
 const WALK_SPEED = 3.4
 const SPRINT_SPEED = 5.4
+const JUMP_SPEED = 6.2
 const MAX_PITCH = Math.PI / 2 - 0.12
 const EYE_HEIGHT = 1.55
 const INTERACT_RANGE = 2.6
@@ -68,6 +69,7 @@ export function PlayerController({
           move: { x: 0, y: 0 },
           lookDelta: { x: 0, y: 0 },
           sprint: false,
+          jumpPressed: false,
           interactPressed: false,
           reseedPressed: false,
           pointerLocked: false,
@@ -108,8 +110,14 @@ export function PlayerController({
     if (wish.current.lengthSq() > 0) wish.current.normalize().multiplyScalar(speed)
 
     const linvel = rb.linvel()
-    // Clamp fall speed so a missed collider doesn't slingshot the camera
-    const vy = Math.max(linvel.y, -12)
+    const grounded = groundedFrames.current >= 2
+
+    let vy = Math.max(linvel.y, -12)
+    if (input.jumpPressed && grounded) {
+      vy = JUMP_SPEED
+      groundedFrames.current = 0
+    }
+
     rb.setLinvel({ x: wish.current.x, y: vy, z: wish.current.z }, true)
 
     let t = rb.translation()
@@ -121,9 +129,10 @@ export function PlayerController({
       t = rb.translation()
     }
 
-    // Detect settled on ground (near spawn height)
-    if (t.y < 0.4 && Math.abs(vy) < 0.35) groundedFrames.current += 1
-    else groundedFrames.current = 0
+    // Grounded when near floor and not rising fast
+    if (t.y < 0.45 && linvel.y <= 0.15) groundedFrames.current += 1
+    else if (t.y > 0.55 || linvel.y > 0.4) groundedFrames.current = 0
+    else groundedFrames.current = Math.max(0, groundedFrames.current - 1)
 
     camera.position.set(t.x, t.y + EYE_HEIGHT, t.z)
     camera.rotation.order = 'YXZ'

@@ -2,6 +2,7 @@ import { useRef, useState, type TouchEvent } from 'react'
 import {
   addTouchLook,
   pressInteract,
+  pressJump,
   setTouchMove,
 } from '../input/controls'
 import { isTouchPrimary } from './platform'
@@ -52,6 +53,17 @@ export function TouchControls({ enabled }: { enabled: boolean }) {
       </div>
 
       <LookPad />
+
+      <button
+        type="button"
+        className="touch-action touch-jump"
+        onTouchStart={(e) => {
+          e.preventDefault()
+          pressJump()
+        }}
+      >
+        JUMP
+      </button>
 
       <button
         type="button"

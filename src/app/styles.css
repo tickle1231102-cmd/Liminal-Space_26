@@ -154,3 +154,24 @@ body,
   letter-spacing: 0.08em;
   color: rgba(232, 228, 216, 0.7);
 }
+
+.touch-jump {
+  right: 124px;
+  bottom: 48px;
+}
+
+/* 포인터 락이 풀렸을 때만 뜨는 복귀 안내 */
+.hud-resume {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  z-index: 11;
+  padding: 0.45rem 0.9rem;
+  background: rgba(10, 12, 18, 0.55);
+  border: 1px solid rgba(232, 228, 216, 0.16);
+  color: rgba(232, 228, 216, 0.72);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+}

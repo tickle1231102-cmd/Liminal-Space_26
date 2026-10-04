@@ -55,6 +55,33 @@ export function MidwayZone({ children }: MidwayProps) {
         <planeGeometry args={[48, 36]} />
         <meshStandardMaterial map={asphalt} color="#3a4558" roughness={0.82} metalness={0.12} />
       </mesh>
+      {/* Connector from plaza gate into midway */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, 12]} receiveShadow>
+        <planeGeometry args={[7.2, 16]} />
+        <meshStandardMaterial
+          map={asphalt}
+          color="#7a869c"
+          roughness={0.72}
+          emissive="#3a4558"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-6, 0.04, 4]}>
+        <planeGeometry args={[5, 20]} />
+        <meshStandardMaterial
+          color="#6a8698"
+          emissive="#2a5060"
+          emissiveIntensity={0.25}
+          roughness={0.75}
+        />
+      </mesh>
+      {[-2, 4, 10].map((z) => (
+        <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, z]}>
+          <planeGeometry args={[0.4, 1.5]} />
+          <meshStandardMaterial color="#5ec8e8" emissive="#5ec8e8" emissiveIntensity={1.2} toneMapped={false} />
+        </mesh>
+      ))}
+      <NeonBar position={[-12, 0.08, -2]} color="#5ec8e8" size={[0.5, 0.04, 8]} />
 
       {/* Ferris wheel */}
       <group position={[-12, 0, -4]}>
