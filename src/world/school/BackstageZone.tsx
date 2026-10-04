@@ -6,6 +6,7 @@ import {
   FloorSlab,
   Fluorescent,
   Slab,
+  WallSlab,
   WallPanel,
 } from './SchoolKit'
 import { GltfAsset, GltfInstances, schoolModel } from '../GltfAsset'
@@ -49,11 +50,11 @@ export function BackstageZone({
       {/* 체육관 본체 */}
       <FloorSlab center={[cx, cz]} width={width} depth={depth} map={wood} color="#b2905c" />
       <CeilingSlab center={[cx, cz]} width={width} depth={depth} y={gymH} />
-      <Slab position={[cx, gymH / 2, cz - depth / 2]} size={[width, gymH, 0.3]} color="#b9b3a2" />
-      <Slab position={[cx, gymH / 2, cz + depth / 2]} size={[width, gymH, 0.3]} color="#b9b3a2" />
-      <Slab position={[cx - width / 2, gymH / 2, cz]} size={[0.3, gymH, depth]} color="#b9b3a2" />
-      <Slab position={[cx + width / 2, gymH / 2, cz - 8]} size={[0.3, gymH, 10]} color="#b9b3a2" />
-      <Slab position={[cx + width / 2, gymH / 2, cz + 7]} size={[0.3, gymH, 12]} color="#b9b3a2" />
+      <WallSlab position={[cx, gymH / 2, cz - depth / 2]} size={[width, gymH, 0.3]} module="gym" />
+      <WallSlab position={[cx, gymH / 2, cz + depth / 2]} size={[width, gymH, 0.3]} module="gym" />
+      <WallSlab position={[cx - width / 2, gymH / 2, cz]} size={[0.3, gymH, depth]} module="gym" />
+      <WallSlab position={[cx + width / 2, gymH / 2, cz - 8]} size={[0.3, gymH, 10]} module="gym" />
+      <WallSlab position={[cx + width / 2, gymH / 2, cz + 7]} size={[0.3, gymH, 12]} module="gym" />
 
       {/* 코트 라인 — 거시 구조, 재시드해도 고정 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0.02, cz]}>

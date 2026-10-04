@@ -7,8 +7,11 @@ import { GltfAsset, ModuleRun, schoolModel } from '../GltfAsset'
 
 export const CEILING_H = 3.4
 
-/** art/blender/school/wall_module.py 의 원래 치수 (2 m × 3.4 m × 0.24 m). */
-const WALL_MODULE = { length: 2, fit: { height: 3.4, thickness: 0.24 } }
+/** 벽 모듈 원래 치수 — 교실/복도: wall_module.py (2 × 3.4 × 0.24 m), 체육관: gym_wall_module.py (2 × 6.6 × 0.3 m). */
+const WALL_MODULES = {
+  classroom: { url: schoolModel('wall_module'), length: 2, fit: { height: 3.4, thickness: 0.24 } },
+  gym: { url: schoolModel('gym_wall_module'), length: 2, fit: { height: 6.6, thickness: 0.3 } },
+}
 
 /** 얇고 높은 슬랩 = 벽. 벽은 Blender 벽 모듈로, 나머지(기둥·선반 등)는 기본 박스로 그린다. */
 function isWall([x, y, z]: [number, number, number]) {
@@ -16,7 +19,16 @@ function isWall([x, y, z]: [number, number, number]) {
 }
 
 /** 벽 한 면: 위치/크기는 기존 Slab과 같고(바닥 기준 y = 높이/2), 모듈을 길이·높이·두께에 맞게 늘린다. */
-export function WallSlab({ position, size }: { position: [number, number, number]; size: [number, number, number] }) {
+export function WallSlab({
+  position,
+  size,
+  module = 'classroom',
+}: {
+  position: [number, number, number]
+  size: [number, number, number]
+  module?: keyof typeof WALL_MODULES
+}) {
+  const m = WALL_MODULES[module]
   const [px, , pz] = position
   const [w, h, d] = size
   const alongX = w >= d
@@ -26,13 +38,13 @@ export function WallSlab({ position, size }: { position: [number, number, number
   return (
     <Suspense fallback={null}>
       <ModuleRun
-        url={schoolModel('wall_module')}
+        url={m.url}
         from={from}
         to={to}
-        module={WALL_MODULE.length}
+        module={m.length}
         height={h}
         thickness={alongX ? d : w}
-        fit={WALL_MODULE.fit}
+        fit={m.fit}
       />
     </Suspense>
   )
