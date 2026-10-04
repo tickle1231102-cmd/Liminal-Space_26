@@ -180,25 +180,18 @@ function FluorescentModel({
   const { scene } = useGLTF(schoolModel('fluorescent'))
   const light = useRef<THREE.PointLight>(null)
   const flicker = !reduceMotion && flickerSeed !== undefined
-  const { root, tube, base } = useMemo(() => {
+  // Tube is drawn unlit (like the old MeshBasicMaterial bar): a lit surface 0.15 m above the
+  // point light blows out and leaves a black hole in bloom.
+  const { root, tube } = useMemo(() => {
     const root = scene.clone(true)
-    let tube: THREE.MeshStandardMaterial | null = null
+    const tube = new THREE.MeshBasicMaterial({ color: on ? '#f2f6ff' : '#6b6f74', toneMapped: false })
     root.traverse((o) => {
       const mesh = o as THREE.Mesh
-      if (!mesh.isMesh) return
-      const mat = mesh.material as THREE.MeshStandardMaterial
-      if (mat.name === 'Tube') {
-        tube = mat.clone()
-        mesh.material = tube
-      }
+      if (mesh.isMesh && (mesh.material as THREE.Material).name === 'Tube') mesh.material = tube
     })
-    const base = tube ? (tube as THREE.MeshStandardMaterial).emissiveIntensity : 1
-    if (tube && !on) {
-      ;(tube as THREE.MeshStandardMaterial).emissiveIntensity = 0
-      ;(tube as THREE.MeshStandardMaterial).color.set('#6b6f74')
-    }
-    return { root, tube: tube as THREE.MeshStandardMaterial | null, base }
+    return { root, tube }
   }, [scene, on])
+  const baseColor = useMemo(() => new THREE.Color(on ? '#f2f6ff' : '#6b6f74'), [on])
 
   useFrame(({ clock }) => {
     if (!on || !flicker) return
@@ -206,7 +199,7 @@ function FluorescentModel({
     const s = Math.sin(t * 11.3 + Math.sin(t * 2.1) * 3)
     const dip = s > 0.86 ? 0.25 : 1
     if (light.current) light.current.intensity = intensity * dip
-    if (tube) tube.emissiveIntensity = base * dip
+    tube.color.copy(baseColor).multiplyScalar(dip)
   })
 
   return (

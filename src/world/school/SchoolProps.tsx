@@ -15,15 +15,15 @@ export function SchoolProps({ zone }: { zone: SchoolZoneName }) {
     <group name={`school-props-${zone}`}>
       {/* Suspense outside the bodies: auto-fit colliders must see the loaded meshes on mount */}
       <Suspense fallback={null}>
-      {decor.props.map((p) => (
-        <SchoolProp
-          key={p.id}
-          id={p.id}
-          kind={p.kind}
-          position={p.position}
-          rotationY={p.rotationY}
-        />
-      ))}
+        {decor.props.map((p) => (
+          <SchoolProp
+            key={p.id}
+            id={p.id}
+            kind={p.kind}
+            position={p.position}
+            rotationY={p.rotationY}
+          />
+        ))}
       </Suspense>
     </group>
   )
