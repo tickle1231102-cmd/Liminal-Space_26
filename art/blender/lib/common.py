@@ -68,9 +68,53 @@ def anchor(name, location):
     return obj
 
 
-def export_glb(path):
+def parent_keep(child, parent):
+    child.parent = parent
+    child.matrix_parent_inverse = parent.matrix_world.inverted()
+
+
+def empty(name, location=(0, 0, 0)):
+    obj = bpy.data.objects.new(name, None)
+    obj.location = location
+    bpy.context.collection.objects.link(obj)
+    return obj
+
+
+def loop_timeline(seconds, fps=30):
+    """Set the scene range for a seamless loop of `seconds`; returns frame count."""
+    scene = bpy.context.scene
+    scene.render.fps = fps
+    frames = round(seconds * fps)
+    scene.frame_start = 0
+    scene.frame_end = frames
+    bpy.context.preferences.edit.keyframe_new_interpolation_type = "LINEAR"
+    return frames
+
+
+def key_spin(obj, axis, frames, turns=1.0, steps=8):
+    """Linear spin of `turns` revolutions over the loop (keys every 1/steps turn)."""
+    import math
+    for i in range(steps + 1):
+        obj.rotation_euler[axis] = turns * 2 * math.pi * i / steps
+        obj.keyframe_insert("rotation_euler", index=axis, frame=frames * i / steps)
+
+
+def key_bob(obj, frames, cycles, amplitude, phase=0.0, samples=48):
+    """Sine bob on Z that loops exactly `cycles` times over the timeline."""
+    import math
+    z0 = obj.location.z
+    for i in range(samples + 1):
+        t = i / samples
+        obj.location.z = z0 + amplitude * math.sin(2 * math.pi * cycles * t + phase)
+        obj.keyframe_insert("location", index=2, frame=frames * t)
+    obj.location.z = z0
+
+
+def export_glb(path, animated=False):
     bpy.ops.export_scene.gltf(
         filepath=path,
+        export_animations=animated,
+        **({"export_animation_mode": "SCENE", "export_force_sampling": True} if animated else {}),
         export_format="GLB",
         export_yup=True,
         export_apply=True,
@@ -100,9 +144,12 @@ def sphere(name, radius, location, mat=None, segments=16):
     return obj
 
 
-def join_visual(name):
-    """Merge every non-COL mesh into one object (one draw call per material at runtime)."""
-    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH" and not o.name.startswith("COL_")]
+def join_visual(name, objs=None):
+    """Merge meshes into one object (one draw call per material at runtime).
+    Default: every non-COL mesh in the scene; pass objs to join a subset (animated parts)."""
+    meshes = objs if objs is not None else [
+        o for o in bpy.context.scene.objects if o.type == "MESH" and not o.name.startswith("COL_")
+    ]
     if len(meshes) < 2:
         return meshes[0] if meshes else None
     bpy.ops.object.select_all(action="DESELECT")

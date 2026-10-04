@@ -3,44 +3,15 @@ import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { Suspense, useMemo, type ReactNode } from 'react'
 import { asphaltMap, neonSignTexture, roughnessNoise } from './procTextures'
 import { NeonBar } from './Atmosphere'
-import { GltfAsset, GltfInstances, parkModel } from './GltfAsset'
+import { GltfAsset, GltfInstances, ModuleRun, parkModel } from './GltfAsset'
 
 const BOLLARDS: [number, number, number][] = [-34, -28, -22, -16, -10, -4, 2, 8, 14].flatMap((z) =>
   [-3.9, 3.9].map((x): [number, number, number] => [x, 0, z]),
 )
 
-const FENCE_PANEL = 2 // must match W in art/blender/park/fence_panel.py
-
-/** Straight fence line from (x,z) to (x,z): instanced 2 m panels, stretched to fit, one collider. */
+/** Perimeter fence line; panel module = W in art/blender/park/fence_panel.py */
 function FenceRun({ from, to }: { from: [number, number]; to: [number, number] }) {
-  const { items, center, half, rotationY } = useMemo(() => {
-    const [dx, dz] = [to[0] - from[0], to[1] - from[1]]
-    const len = Math.hypot(dx, dz)
-    const n = Math.max(1, Math.round(len / FENCE_PANEL))
-    const rotationY = -Math.atan2(dz, dx)
-    const items = Array.from({ length: n }, (_, i) => {
-      const t = (i + 0.5) / n
-      return {
-        position: [from[0] + dx * t, 0, from[1] + dz * t] as [number, number, number],
-        rotationY,
-        scale: [len / n / FENCE_PANEL, 1, 1] as [number, number, number],
-      }
-    })
-    return {
-      items,
-      center: [(from[0] + to[0]) / 2, 1.15, (from[1] + to[1]) / 2] as [number, number, number],
-      half: [len / 2, 1.15, 0.14] as [number, number, number],
-      rotationY,
-    }
-  }, [from, to])
-  return (
-    <>
-      <GltfInstances url={parkModel('fence_panel')} items={items} />
-      <RigidBody type="fixed" colliders={false}>
-        <CuboidCollider args={half} position={center} rotation={[0, rotationY, 0]} />
-      </RigidBody>
-    </>
-  )
+  return <ModuleRun url={parkModel('fence_panel')} from={from} to={to} module={2} height={2.3} thickness={0.28} />
 }
 
 export function PlazaZone({ children }: { children?: ReactNode }) {

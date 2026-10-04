@@ -98,13 +98,11 @@ function WorldContent({
         <ProceduralProps zone="plaza" />
       </PlazaZone>
       <DistanceLod center={[0, 0, -42]} near={60}>
-        <MidwayZone>
-          <RideSeat
-            id="carousel-horse-0"
-            label="Carousel horse"
-            position={[2.9, 1.0, 0]}
-            onRideChange={onRideChange}
-          />
+        <MidwayZone
+          carouselRiders={
+            <RideSeat id="carousel-horse-0" label="Carousel horse" position={[2.9, 1.0, 0]} onRideChange={onRideChange} />
+          }
+        >
           <ProceduralProps zone="midway" />
         </MidwayZone>
       </DistanceLod>

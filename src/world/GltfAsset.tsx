@@ -1,6 +1,7 @@
-import { useGLTF } from '@react-three/drei'
+import { useAnimations, useGLTF } from '@react-three/drei'
+import { createPortal } from '@react-three/fiber'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { useMemo } from 'react'
+import { useEffect, useMemo, type ReactNode } from 'react'
 import { Box3, Euler, Matrix4, Mesh, Quaternion, Vector3, type Object3D } from 'three'
 
 // Runtime side of the Blender naming contract (art/blender/lib/common.py):
@@ -126,4 +127,94 @@ export function GltfVisual({ url }: { url: string }) {
     return root
   }, [scene])
   return <primitive object={root} />
+}
+
+/**
+ * Model with baked Blender animation: every clip loops via AnimationMixer.
+ * `children` are mounted onto the node named `mountNode` so they ride along (e.g. carousel "Platform").
+ */
+export function GltfAnimated({
+  url,
+  position = [0, 0, 0],
+  rotationY = 0,
+  mountNode,
+  children,
+}: {
+  url: string
+  position?: [number, number, number]
+  rotationY?: number
+  mountNode?: string
+  children?: ReactNode
+}) {
+  const { scene, animations } = useGLTF(url)
+  const { root, colliders } = useMemo(() => {
+    const root = scene.clone(true)
+    return { root, ...extract(root) }
+  }, [scene])
+  const { actions } = useAnimations(animations, root)
+  useEffect(() => {
+    const all = Object.values(actions)
+    all.forEach((a) => a?.reset().play())
+    return () => all.forEach((a) => a?.stop())
+  }, [actions])
+  const mount = useMemo(() => (mountNode ? root.getObjectByName(mountNode) : undefined), [root, mountNode])
+
+  return (
+    <group position={position} rotation={[0, rotationY, 0]}>
+      <primitive object={root} />
+      {colliders.length > 0 && (
+        <RigidBody type="fixed" colliders={false}>
+          {colliders.map((c) => (
+            <CuboidCollider key={c.key} args={c.half} position={c.position} rotation={c.rotation} friction={1} />
+          ))}
+        </RigidBody>
+      )}
+      {mount && children ? createPortal(children, mount) : null}
+    </group>
+  )
+}
+
+/**
+ * Straight run of a tiling module (fence, wall) from (x,z) to (x,z): instanced copies stretched
+ * to fit exactly, plus one collider for the whole run. `module` = model length along its X.
+ */
+export function ModuleRun({
+  url,
+  from,
+  to,
+  module,
+  height,
+  thickness,
+}: {
+  url: string
+  from: [number, number]
+  to: [number, number]
+  module: number
+  height: number
+  thickness: number
+}) {
+  const { items, center, half, rotationY } = useMemo(() => {
+    const [dx, dz] = [to[0] - from[0], to[1] - from[1]]
+    const len = Math.hypot(dx, dz)
+    const n = Math.max(1, Math.round(len / module))
+    const rotationY = -Math.atan2(dz, dx)
+    const items: InstanceXform[] = Array.from({ length: n }, (_, i) => {
+      const t = (i + 0.5) / n
+      return { position: [from[0] + dx * t, 0, from[1] + dz * t], rotationY, scale: [len / n / module, 1, 1] }
+    })
+    return {
+      items,
+      center: [(from[0] + to[0]) / 2, height / 2, (from[1] + to[1]) / 2] as [number, number, number],
+      half: [len / 2, height / 2, thickness / 2] as [number, number, number],
+      rotationY,
+    }
+  }, [from, to, module, height, thickness])
+  return (
+    <>
+      <GltfInstances url={url} items={items} />
+      <RigidBody type="fixed" colliders={false}>
+        <CuboidCollider args={half} position={center} rotation={[0, rotationY, 0]} />
+      </RigidBody>
+    </>
+  )
 }
