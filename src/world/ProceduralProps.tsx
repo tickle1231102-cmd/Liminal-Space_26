@@ -1,13 +1,14 @@
-import { useMemo } from 'react'
-import { createZoneDecor } from '../proc/createZoneDecor'
+import { Suspense, useMemo } from 'react'
+import { createZoneDecor, type PropSpawn } from '../proc/createZoneDecor'
+import { GltfVisual, parkModel } from './GltfAsset'
 import { useWorldSeed } from '../proc/WorldSeedContext'
 import { RigidBody } from '@react-three/rapier'
 
-const KIND_COLOR: Record<string, string> = {
-  cup: '#d9c4a5',
-  flyer: '#e8e4d8',
-  ticket: '#e85d75',
-  trash: '#4a5568',
+const KIND_MODEL: Record<PropSpawn['kind'], string> = {
+  cup: parkModel('prop_cup'),
+  flyer: parkModel('prop_flyer'),
+  ticket: parkModel('prop_ticket'),
+  trash: parkModel('prop_trash'),
 }
 
 export function ProceduralProps({ zone }: { zone: string }) {
@@ -16,22 +17,22 @@ export function ProceduralProps({ zone }: { zone: string }) {
 
   return (
     <group name={`props-${zone}`}>
-      {decor.props.map((p) => (
-        <RigidBody
-          key={p.id}
-          colliders="cuboid"
-          position={p.position}
-          rotation={[0, p.rotationY, 0]}
-          mass={0.2}
-          linearDamping={0.8}
-          angularDamping={0.9}
-        >
-          <mesh castShadow>
-            <boxGeometry args={p.kind === 'flyer' ? [0.35, 0.02, 0.45] : [0.22, 0.28, 0.22]} />
-            <meshStandardMaterial color={KIND_COLOR[p.kind] ?? '#888'} roughness={0.8} />
-          </mesh>
-        </RigidBody>
-      ))}
+      {/* Suspense outside the bodies: auto-fit colliders must see the loaded meshes on mount */}
+      <Suspense fallback={null}>
+        {decor.props.map((p) => (
+          <RigidBody
+            key={p.id}
+            colliders="cuboid"
+            position={p.position}
+            rotation={[0, p.rotationY, 0]}
+            mass={0.2}
+            linearDamping={0.8}
+            angularDamping={0.9}
+          >
+            <GltfVisual url={KIND_MODEL[p.kind]} />
+          </RigidBody>
+        ))}
+      </Suspense>
 
       {decor.lights.map((l) =>
         l.on ? (

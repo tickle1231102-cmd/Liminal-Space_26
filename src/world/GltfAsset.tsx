@@ -110,3 +110,20 @@ export function GltfInstances({ url, items }: { url: string; items: InstanceXfor
     </>
   )
 }
+
+/** ANCHOR_* points of a model in its own (unplaced) space, for seeded placement. */
+export function useGltfAnchors(url: string): GltfAnchor[] {
+  const { scene } = useGLTF(url)
+  return useMemo(() => extract(scene.clone(true)).anchors, [scene])
+}
+
+/** Visual-only copy (no colliders) — e.g. inside a dynamic RigidBody that auto-fits its own collider. */
+export function GltfVisual({ url }: { url: string }) {
+  const { scene } = useGLTF(url)
+  const root = useMemo(() => {
+    const root = scene.clone(true)
+    extract(root)
+    return root
+  }, [scene])
+  return <primitive object={root} />
+}

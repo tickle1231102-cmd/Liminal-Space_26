@@ -7,7 +7,7 @@ import {
   type ComfortSettings,
 } from './comfort'
 import { detectPlatform, isTouchPrimary } from './platform'
-import { loadScene, saveScene, type SceneId } from './scene'
+import { loadScene, type SceneId } from './scene'
 import {
   bindDesktopInput,
   pressReseed,
@@ -28,10 +28,6 @@ export function App() {
     setLookSensitivity(comfort.lookSensitivity)
     saveComfortSettings(comfort)
   }, [comfort])
-
-  useEffect(() => {
-    saveScene(scene)
-  }, [scene])
 
   useEffect(() => {
     if (!started || touch) return
