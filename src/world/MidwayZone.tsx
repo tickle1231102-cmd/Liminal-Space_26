@@ -61,7 +61,8 @@ export function MidwayZone({ children, carouselRiders }: MidwayProps) {
         {/* Ghost house facade */}
         <GltfAsset url={parkModel('ghost_house')} position={[0, 0, -12]} />
       </Suspense>
-      <NeonBar position={[-12, 2.15, -2.6]} color="#5ec8e8" size={[2.2, 0.06, 0.06]} />
+      {/* Operator booth sign (booth is part of ferris_wheel.glb) */}
+      <NeonBar position={[-16.4, 1.9, -1.05]} color="#5ec8e8" size={[1.4, 0.06, 0.06]} />
       <pointLight position={[10, 3.4, 2]} intensity={10} distance={16} color="#ff8fab" />
       <NeonBar position={[0, 4.5, -10.8]} color="#c7a0ff" size={[4, 0.06, 0.06]} />
       {children}

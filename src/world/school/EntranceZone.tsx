@@ -1,6 +1,5 @@
-import { useMemo, type ReactNode } from 'react'
+import { Suspense, useMemo, type ReactNode } from 'react'
 import {
-  Baseboard,
   CEILING_H,
   CeilingSlab,
   FloorSlab,
@@ -9,6 +8,7 @@ import {
   WallPanel,
   WallWithGap,
 } from './SchoolKit'
+import { GltfAsset, schoolModel } from '../GltfAsset'
 import { linoleumMap, lockerLabelTexture, noticeTexture } from './schoolTextures'
 import { useSchoolLights } from './SchoolProps'
 
@@ -37,17 +37,13 @@ export function EntranceZone({
       <CeilingSlab center={[0, 13]} width={18} depth={18} />
 
       {/* 바깥 유리문 — 통과할 수 없고 너머는 비어 있다 */}
-      <Slab position={[0, CEILING_H / 2, 22]} size={[18, CEILING_H, 0.3]} color="#2b323c" roughness={0.35} metalness={0.3} />
-      <mesh position={[0, 1.6, 21.82]}>
-        <planeGeometry args={[7.4, 2.6]} />
-        <meshStandardMaterial color="#0d1016" roughness={0.12} metalness={0.5} transparent opacity={0.92} />
-      </mesh>
+      <Suspense fallback={null}>
+        <GltfAsset url={schoolModel('glass_front')} position={[0, 0, 22]} />
+      </Suspense>
 
       {/* 좌우 벽 */}
       <Slab position={[-9, CEILING_H / 2, 13]} size={[0.3, CEILING_H, 18]} color="#c0bcae" />
       <Slab position={[9, CEILING_H / 2, 13]} size={[0.3, CEILING_H, 18]} color="#c0bcae" />
-      <Baseboard position={[-8.8, 0.08, 13]} length={18} rotationY={Math.PI / 2} />
-      <Baseboard position={[8.8, 0.08, 13]} length={18} rotationY={Math.PI / 2} />
 
       {/* 중앙 복도로 이어지는 개구부 */}
       <WallWithGap z={4} from={-9} to={9} gapFrom={-3} gapTo={3} />
@@ -56,7 +52,9 @@ export function EntranceZone({
       {([-7.2, 7.2] as const).map((x) =>
         [8.5, 12.5, 16.5].map((z) => (
           <group key={`${x}:${z}`}>
-            <Slab position={[x, 0.95, z]} size={[1.4, 1.9, 3.4]} color="#8fa0a8" roughness={0.6} metalness={0.2} />
+            <Suspense fallback={null}>
+              <GltfAsset url={schoolModel('shoe_locker')} position={[x, 0, z]} rotationY={x > 0 ? Math.PI : 0} />
+            </Suspense>
             <WallPanel
               position={[x > 0 ? x - 0.72 : x + 0.72, 1.1, z]}
               rotationY={x > 0 ? -Math.PI / 2 : Math.PI / 2}

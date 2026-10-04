@@ -1,7 +1,6 @@
-import { useMemo, type ReactNode } from 'react'
+import { Suspense, useMemo, type ReactNode } from 'react'
 import type * as THREE from 'three'
 import {
-  Baseboard,
   CEILING_H,
   CeilingSlab,
   Doorway,
@@ -10,6 +9,7 @@ import {
   Slab,
   WallPanel,
 } from './SchoolKit'
+import { GltfAsset, schoolModel } from '../GltfAsset'
 import { chalkboardTexture, linoleumMap, noticeTexture } from './schoolTextures'
 import { useSchoolLights } from './SchoolProps'
 
@@ -107,7 +107,6 @@ function Classroom({
         map={board}
         emissiveIntensity={0.08}
       />
-      <Baseboard position={[cx, 0.08, z + depth / 2 - 0.18]} length={width} />
       <Fluorescent
         position={[cx, CEILING_H - 0.12, z]}
         length={3.0}
@@ -157,8 +156,6 @@ export function CorridorZone({
 
       <WallRun x={-4} from={-46} to={4} gaps={doorGaps(-1)} />
       <WallRun x={4} from={-46} to={4} gaps={doorGaps(1)} />
-      <Baseboard position={[-3.8, 0.08, -21]} length={50} rotationY={Math.PI / 2} />
-      <Baseboard position={[3.8, 0.08, -21]} length={50} rotationY={Math.PI / 2} />
 
       {CLASSROOM_DOORS.map((d, i) => (
         <group key={d.z}>
@@ -177,20 +174,9 @@ export function CorridorZone({
 
       {/* 중앙 계단 — 복도 중간의 고정 랜드마크 */}
       <group name="central-stairs" position={[0, 0, -24]}>
-        {Array.from({ length: 8 }, (_, i) => (
-          <Slab
-            key={i}
-            position={[-2.4, 0.11 + i * 0.22, -0.3 - i * 0.3]}
-            size={[3, 0.22, 0.3]}
-            color="#a9a698"
-          />
-        ))}
-        <Slab position={[-2.4, 1.95, -3.1]} size={[3, 0.22, 1.6]} color="#a9a698" />
-        <Slab position={[-2.4, 2.9, -3.95]} size={[3.2, 1.8, 0.24]} color="#1a1d24" roughness={0.98} />
-        <mesh position={[-0.85, 0.85, -1.6]} rotation={[0, 0, 0]}>
-          <boxGeometry args={[0.05, 0.05, 3.4]} />
-          <meshStandardMaterial color="#6f7a80" metalness={0.6} roughness={0.35} />
-        </mesh>
+        <Suspense fallback={null}>
+          <GltfAsset url={schoolModel('stairs')} />
+        </Suspense>
       </group>
 
       {/* 복도 게시판 */}

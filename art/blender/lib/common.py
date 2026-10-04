@@ -69,6 +69,9 @@ def anchor(name, location):
 
 
 def parent_keep(child, parent):
+    """Parent while keeping the child's world transform."""
+    # matrix_world of freshly created/moved objects is stale until the depsgraph updates
+    bpy.context.view_layer.update()
     child.parent = parent
     child.matrix_parent_inverse = parent.matrix_world.inverted()
 

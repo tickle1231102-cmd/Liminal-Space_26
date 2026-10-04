@@ -3,6 +3,7 @@ import { RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { useInteraction } from '../player/InteractionContext'
+import { GltfVisual, parkModel } from '../world/GltfAsset'
 
 type RideSeatProps = {
   id: string
@@ -11,7 +12,7 @@ type RideSeatProps = {
   onRideChange: (riding: boolean, worldPos: THREE.Vector3 | null) => void
 }
 
-/** Simple boardable seat — used for carousel horse / gondola stubs. */
+/** Boardable carousel horse. */
 export function RideSeat({ id, label, position, onRideChange }: RideSeatProps) {
   const body = useRef<RapierRigidBody>(null)
   const interaction = useInteraction()
@@ -42,10 +43,8 @@ export function RideSeat({ id, label, position, onRideChange }: RideSeatProps) {
   return (
     <group ref={group} position={position}>
       <RigidBody ref={body} type="fixed" colliders="cuboid">
-        <mesh castShadow>
-          <boxGeometry args={[0.7, 0.9, 1.1]} />
-          <meshStandardMaterial color="#e8d5a3" roughness={0.55} />
-        </mesh>
+        {/* art/blender/park/carousel_horse.py — mount inside a Suspense so the auto-fit collider sees the mesh */}
+        <GltfVisual url={parkModel('carousel_horse')} />
       </RigidBody>
     </group>
   )

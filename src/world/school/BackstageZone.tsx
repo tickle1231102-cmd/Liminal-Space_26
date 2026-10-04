@@ -1,6 +1,5 @@
-import { useMemo, type ReactNode } from 'react'
+import { Suspense, useMemo, type ReactNode } from 'react'
 import {
-  Baseboard,
   CEILING_H,
   CeilingSlab,
   Doorway,
@@ -9,6 +8,7 @@ import {
   Slab,
   WallPanel,
 } from './SchoolKit'
+import { GltfAsset, GltfInstances, schoolModel } from '../GltfAsset'
 import { gymFloorMap, linoleumMap, noticeTexture } from './schoolTextures'
 import { useSchoolLights } from './SchoolProps'
 import { BACKSTAGE_GAP } from './CorridorZone'
@@ -17,6 +17,8 @@ import { BACKSTAGE_GAP } from './CorridorZone'
  * 강당·체육관 뒤편·방송실 (원작의 백스테이지). 리미널 효과가 가장 짙은 구역.
  * 아무도 없는 코트에 경기 중처럼 조명이 켜져 있고, 방송실 콘솔만 살아 있다.
  */
+const GYM_LIGHTS: Array<[number, number]> = [-8, 0, 8].flatMap((dz) => [-6, 6].map((dx): [number, number] => [dx, dz]))
+
 export function BackstageZone({
   reduceMotion,
   children,
@@ -52,7 +54,6 @@ export function BackstageZone({
       <Slab position={[cx - width / 2, gymH / 2, cz]} size={[0.3, gymH, depth]} color="#b9b3a2" />
       <Slab position={[cx + width / 2, gymH / 2, cz - 8]} size={[0.3, gymH, 10]} color="#b9b3a2" />
       <Slab position={[cx + width / 2, gymH / 2, cz + 7]} size={[0.3, gymH, 12]} color="#b9b3a2" />
-      <Baseboard position={[cx, 0.08, cz - depth / 2 + 0.2]} length={width} />
 
       {/* 코트 라인 — 거시 구조, 재시드해도 고정 */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[cx, 0.02, cz]}>
@@ -66,33 +67,24 @@ export function BackstageZone({
         </mesh>
       ))}
 
-      {/* 농구 골대 양 끝 */}
-      {([-1, 1] as const).map((s) => (
-        <group key={`hoop${s}`} position={[cx, 0, cz + s * 10.5]}>
-          <Slab position={[0, 1.7, 0]} size={[0.16, 3.4, 0.16]} color="#5e676d" metalness={0.6} roughness={0.35} />
-          <Slab position={[0, 3.3, -s * 0.5]} size={[1.8, 1.1, 0.08]} color="#e6e2d6" roughness={0.5} />
-          <mesh position={[0, 2.95, -s * 0.85]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.22, 0.26, 20]} />
-            <meshStandardMaterial color="#d4642a" roughness={0.6} />
-          </mesh>
-        </group>
+      <Suspense fallback={null}>
+        {/* 농구 골대 양 끝 — 백보드가 코트 안쪽을 본다 */}
+        {([-1, 1] as const).map((s) => (
+          <GltfAsset
+            key={`hoop${s}`}
+            url={schoolModel('basketball_hoop')}
+            position={[cx, 0, cz + s * 10.5]}
+            rotationY={s > 0 ? 0 : Math.PI}
+          />
+        ))}
+        {/* 접혀 있는 관중석 */}
+        <GltfAsset url={schoolModel('bleachers')} position={[cx - 10.4, 0, cz]} />
+        {/* 체육관 조명 — 경기 중처럼 전부 켜져 있다 */}
+        <GltfInstances url={schoolModel('gym_light')} items={GYM_LIGHTS.map(([dx, dz]) => ({ position: [cx + dx, gymH - 0.4, cz + dz] }))} />
+      </Suspense>
+      {GYM_LIGHTS.map(([dx, dz]) => (
+        <pointLight key={`${dx}:${dz}`} position={[cx + dx, gymH - 0.8, cz + dz]} intensity={16} distance={18} decay={2} color="#ffeccc" />
       ))}
-
-      {/* 접혀 있는 관중석 */}
-      <Slab position={[cx - 10.4, 0.9, cz]} size={[2.6, 1.8, depth - 4]} color="#7d6a52" roughness={0.85} />
-
-      {/* 체육관 조명 — 경기 중처럼 전부 켜져 있다 */}
-      {[-8, 0, 8].map((dz) =>
-        [-6, 6].map((dx) => (
-          <group key={`${dx}:${dz}`} position={[cx + dx, gymH - 0.4, cz + dz]}>
-            <mesh>
-              <boxGeometry args={[1.1, 0.16, 1.1]} />
-              <meshBasicMaterial color="#fff6e0" toneMapped={false} />
-            </mesh>
-            <pointLight position={[0, -0.4, 0]} intensity={16} distance={18} decay={2} color="#ffeccc" />
-          </group>
-        )),
-      )}
 
       {/* 방송실 — 체육관 뒤편으로 이어지는 작은 방 */}
       <group name="broadcast-room">
@@ -103,13 +95,9 @@ export function BackstageZone({
         <Slab position={[cx + 19, 1.45, cz]} size={[0.24, 2.9, 7]} color="#b6b2a4" />
 
         {/* 콘솔 — 유일하게 계속 살아 있는 장비 */}
-        <Slab position={[cx + 17.6, 0.5, cz]} size={[1.0, 1.0, 4.2]} color="#39424a" metalness={0.45} roughness={0.45} />
-        {[-1.2, 0, 1.2].map((dz) => (
-          <mesh key={dz} position={[cx + 17.1, 1.02, cz + dz]}>
-            <boxGeometry args={[0.22, 0.04, 0.6]} />
-            <meshStandardMaterial color="#8ef0c8" emissive="#6ae0b0" emissiveIntensity={1.4} toneMapped={false} />
-          </mesh>
-        ))}
+        <Suspense fallback={null}>
+          <GltfAsset url={schoolModel('broadcast_console')} position={[cx + 17.6, 0, cz]} />
+        </Suspense>
         <pointLight position={[cx + 17, 1.5, cz]} intensity={3.5} distance={6} decay={2} color="#8ef0c8" />
         <WallPanel
           position={[cx + 15, 1.8, cz - 3.3]}

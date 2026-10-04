@@ -4,9 +4,11 @@ import {
   RigidBody,
   type RapierRigidBody,
 } from '@react-three/rapier'
-import { useEffect, useRef } from 'react'
+import { useGLTF } from '@react-three/drei'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import { useInteraction } from '../player/InteractionContext'
+import { parkModel } from '../world/GltfAsset'
 
 type BalloonProps = {
   id?: string
@@ -15,6 +17,32 @@ type BalloonProps = {
 }
 
 const WIND_STRENGTH = 0.35
+const MODEL = parkModel('balloon')
+
+/** art/blender/park/balloon.py, with the "BalloonSkin" material re-tinted per seed. */
+function useTintedBalloon(color: string) {
+  const { scene } = useGLTF(MODEL)
+  return useMemo(() => {
+    const root = scene.clone(true)
+    root.traverse((o) => {
+      const mesh = o as THREE.Mesh
+      if (!mesh.isMesh) return
+      mesh.castShadow = true
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+      const tinted = mats.map((m) => {
+        if (m.name !== 'BalloonSkin') return m
+        const t = (m as THREE.MeshStandardMaterial).clone()
+        t.color.set(color)
+        t.emissive.set(color)
+        t.emissiveIntensity = 0.18
+        t.toneMapped = false
+        return t
+      })
+      mesh.material = Array.isArray(mesh.material) ? tinted : tinted[0]!
+    })
+    return root
+  }, [scene, color])
+}
 const RELEASE_FORCE = 14
 
 export function Balloon({
@@ -30,6 +58,7 @@ export function Balloon({
   const holdPos = useRef(new THREE.Vector3())
   const prevHold = useRef(new THREE.Vector3())
   const heldVelocity = useRef(new THREE.Vector3())
+  const model = useTintedBalloon(color)
 
   useEffect(() => {
     interaction.register({
@@ -113,30 +142,7 @@ export function Balloon({
       ccd
     >
       <BallCollider args={[0.45]} restitution={0.55} friction={0.2} />
-      <mesh castShadow>
-        <sphereGeometry args={[0.48, 32, 32]} />
-        <meshPhysicalMaterial
-          color={color}
-          roughness={0.22}
-          metalness={0.05}
-          clearcoat={0.65}
-          clearcoatRoughness={0.25}
-          sheen={0.4}
-          sheenColor={color}
-          emissive={color}
-          emissiveIntensity={0.18}
-          toneMapped={false}
-        />
-      </mesh>
-      {/* highlight knot */}
-      <mesh position={[0, -0.48, 0]}>
-        <sphereGeometry args={[0.06, 10, 10]} />
-        <meshStandardMaterial color="#f2e8d8" roughness={0.5} />
-      </mesh>
-      <mesh position={[0, -0.85, 0]}>
-        <cylinderGeometry args={[0.012, 0.012, 0.75, 6]} />
-        <meshStandardMaterial color="#e8dfd0" roughness={0.6} />
-      </mesh>
+      <primitive object={model} />
     </RigidBody>
   )
 }

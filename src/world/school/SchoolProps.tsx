@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
 import { createSchoolDecor, type SchoolZoneName } from '../../proc/createSchoolDecor'
 import { useWorldSeed } from '../../proc/WorldSeedContext'
 import { SchoolProp } from '../../objects/SchoolProp'
@@ -13,6 +13,8 @@ export function SchoolProps({ zone }: { zone: SchoolZoneName }) {
 
   return (
     <group name={`school-props-${zone}`}>
+      {/* Suspense outside the bodies: auto-fit colliders must see the loaded meshes on mount */}
+      <Suspense fallback={null}>
       {decor.props.map((p) => (
         <SchoolProp
           key={p.id}
@@ -22,6 +24,7 @@ export function SchoolProps({ zone }: { zone: SchoolZoneName }) {
           rotationY={p.rotationY}
         />
       ))}
+      </Suspense>
     </group>
   )
 }

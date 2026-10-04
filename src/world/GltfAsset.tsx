@@ -39,28 +39,39 @@ export function GltfAsset({
   url,
   position = [0, 0, 0],
   rotationY = 0,
+  scale = [1, 1, 1],
 }: {
   url: string
   position?: [number, number, number]
   rotationY?: number
+  /** Non-uniform stretch (e.g. a door frame fitted to its opening); colliders follow. */
+  scale?: [number, number, number]
 }) {
   const { scene } = useGLTF(url)
   const { root, colliders } = useMemo(() => {
     const root = scene.clone(true)
     return { root, ...extract(root) }
   }, [scene])
+  const [sx, sy, sz] = scale
 
   return (
     <RigidBody type="fixed" colliders={false} position={position} rotation={[0, rotationY, 0]}>
-      <primitive object={root} />
+      <primitive object={root} scale={scale} />
       {colliders.map((c) => (
-        <CuboidCollider key={c.key} args={c.half} position={c.position} rotation={c.rotation} friction={1} />
+        <CuboidCollider
+          key={c.key}
+          args={[c.half[0] * sx, c.half[1] * sy, c.half[2] * sz]}
+          position={[c.position[0] * sx, c.position[1] * sy, c.position[2] * sz]}
+          rotation={c.rotation}
+          friction={1}
+        />
       ))}
     </RigidBody>
   )
 }
 
 export const parkModel = (name: string) => `${import.meta.env.BASE_URL}assets/models/park/${name}.glb`
+export const schoolModel = (name: string) => `${import.meta.env.BASE_URL}assets/models/school/${name}.glb`
 
 export type InstanceXform = { position: [number, number, number]; rotationY?: number; scale?: [number, number, number] }
 
@@ -185,6 +196,7 @@ export function ModuleRun({
   module,
   height,
   thickness,
+  fit,
 }: {
   url: string
   from: [number, number]
@@ -192,6 +204,8 @@ export function ModuleRun({
   module: number
   height: number
   thickness: number
+  /** Model's native height/thickness: when given, modules are also stretched to `height`/`thickness`. */
+  fit?: { height: number; thickness: number }
 }) {
   const { items, center, half, rotationY } = useMemo(() => {
     const [dx, dz] = [to[0] - from[0], to[1] - from[1]]
@@ -200,7 +214,9 @@ export function ModuleRun({
     const rotationY = -Math.atan2(dz, dx)
     const items: InstanceXform[] = Array.from({ length: n }, (_, i) => {
       const t = (i + 0.5) / n
-      return { position: [from[0] + dx * t, 0, from[1] + dz * t], rotationY, scale: [len / n / module, 1, 1] }
+      const sy = fit ? height / fit.height : 1
+      const sz = fit ? thickness / fit.thickness : 1
+      return { position: [from[0] + dx * t, 0, from[1] + dz * t], rotationY, scale: [len / n / module, sy, sz] }
     })
     return {
       items,
@@ -208,7 +224,7 @@ export function ModuleRun({
       half: [len / 2, height / 2, thickness / 2] as [number, number, number],
       rotationY,
     }
-  }, [from, to, module, height, thickness])
+  }, [from, to, module, height, thickness, fit])
   return (
     <>
       <GltfInstances url={url} items={items} />

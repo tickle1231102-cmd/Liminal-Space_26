@@ -4,6 +4,7 @@ import { RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
 import { useInteraction } from '../player/InteractionContext'
 import type { SchoolPropKind } from '../proc/createSchoolDecor'
+import { GltfVisual, schoolModel } from '../world/GltfAsset'
 
 type SchoolPropProps = {
   id: string
@@ -35,86 +36,14 @@ const DRAG_HEIGHT = 0.45
 /** 이보다 빠르게 휘두르면 손에서 놓친다 (PRD 04절 — 과도한 힘이면 놓침). */
 const RELEASE_SPEED = 9
 
-function PropMesh({ kind }: { kind: SchoolPropKind }) {
-  switch (kind) {
-    case 'chair':
-      return (
-        <group>
-          <mesh castShadow position={[0, 0, 0]}>
-            <boxGeometry args={[0.42, 0.06, 0.42]} />
-            <meshStandardMaterial color="#b8823f" roughness={0.75} />
-          </mesh>
-          <mesh castShadow position={[0, 0.3, -0.19]}>
-            <boxGeometry args={[0.42, 0.55, 0.05]} />
-            <meshStandardMaterial color="#b8823f" roughness={0.75} />
-          </mesh>
-          {([-0.17, 0.17] as const).map((x) =>
-            ([-0.17, 0.17] as const).map((z) => (
-              <mesh key={`${x}:${z}`} castShadow position={[x, -0.22, z]}>
-                <cylinderGeometry args={[0.022, 0.022, 0.44, 8]} />
-                <meshStandardMaterial color="#5f6a70" metalness={0.55} roughness={0.42} />
-              </mesh>
-            )),
-          )}
-        </group>
-      )
-    case 'desk':
-      return (
-        <group>
-          <mesh castShadow position={[0, 0.1, 0]}>
-            <boxGeometry args={[0.7, 0.06, 0.5]} />
-            <meshStandardMaterial color="#c49450" roughness={0.72} />
-          </mesh>
-          <mesh castShadow position={[0, -0.05, -0.18]}>
-            <boxGeometry args={[0.66, 0.2, 0.12]} />
-            <meshStandardMaterial color="#8d9299" metalness={0.4} roughness={0.5} />
-          </mesh>
-          {([-0.3, 0.3] as const).map((x) =>
-            ([-0.2, 0.2] as const).map((z) => (
-              <mesh key={`${x}:${z}`} castShadow position={[x, -0.2, z]}>
-                <cylinderGeometry args={[0.025, 0.025, 0.55, 8]} />
-                <meshStandardMaterial color="#5f6a70" metalness={0.55} roughness={0.42} />
-              </mesh>
-            )),
-          )}
-        </group>
-      )
-    case 'tray':
-      return (
-        <mesh castShadow>
-          <boxGeometry args={[0.42, 0.05, 0.32]} />
-          <meshStandardMaterial color="#cfd4d8" metalness={0.75} roughness={0.28} />
-        </mesh>
-      )
-    case 'ball':
-      return (
-        <mesh castShadow>
-          <sphereGeometry args={[0.12, 20, 20]} />
-          <meshStandardMaterial color="#c4632a" roughness={0.85} />
-        </mesh>
-      )
-    case 'bin':
-      return (
-        <group>
-          <mesh castShadow>
-            <boxGeometry args={[0.45, 1.5, 0.45]} />
-            <meshStandardMaterial color="#6f7f86" metalness={0.35} roughness={0.55} />
-          </mesh>
-          <mesh position={[0, 0.2, 0.23]}>
-            <boxGeometry args={[0.3, 0.02, 0.02]} />
-            <meshStandardMaterial color="#39434a" />
-          </mesh>
-        </group>
-      )
-    case 'book':
-    default:
-      return (
-        <mesh castShadow>
-          <boxGeometry args={[0.2, 0.04, 0.27]} />
-          <meshStandardMaterial color="#d8d2c0" roughness={0.9} />
-        </mesh>
-      )
-  }
+/** art/blender/school/prop_<kind>.py — 원점은 예전 박스 메시와 같은 자리라 스폰 높이를 그대로 쓴다. */
+const MODEL: Record<SchoolPropKind, string> = {
+  chair: schoolModel('prop_chair'),
+  desk: schoolModel('prop_desk'),
+  tray: schoolModel('prop_tray'),
+  ball: schoolModel('prop_ball'),
+  bin: schoolModel('prop_bin'),
+  book: schoolModel('prop_book'),
 }
 
 /**
@@ -187,7 +116,7 @@ export function SchoolProp({ id, kind, position, rotationY = 0 }: SchoolPropProp
       type={held ? 'kinematicPosition' : 'dynamic'}
       ccd
     >
-      <PropMesh kind={kind} />
+      <GltfVisual url={MODEL[kind]} />
     </RigidBody>
   )
 }
