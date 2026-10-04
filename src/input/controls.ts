@@ -87,13 +87,22 @@ export function bindDesktopInput(target: HTMLElement = document.body): () => voi
   const onKeyUp = (e: KeyboardEvent) => {
     state.keys.delete(e.code)
   }
+  // Drag-to-look: works without pointer lock (embedded previews, lock denied, Esc'd out)
+  let dragging = false
+  const onMouseDown = (e: MouseEvent) => {
+    if (e.button !== 0 || (e.target as HTMLElement | null)?.closest('button, a, input')) return
+    dragging = true
+  }
+  const onMouseUp = () => {
+    dragging = false
+  }
   const onMouseMove = (e: MouseEvent) => {
-    if (!state.pointerLocked) return
+    if (!state.pointerLocked && !dragging) return
     if (performance.now() < state.lookIgnoreUntil) return
     const dx = clamp(e.movementX * 0.0022 * state.sensitivity, -MAX_LOOK_STEP, MAX_LOOK_STEP)
     const dy = clamp(e.movementY * 0.0022 * state.sensitivity, -MAX_LOOK_STEP, MAX_LOOK_STEP)
     // Discard pathological spikes (pointer-lock engage)
-    if (Math.abs(e.movementX) > 80 || Math.abs(e.movementY) > 80) return
+    if (state.pointerLocked && (Math.abs(e.movementX) > 80 || Math.abs(e.movementY) > 80)) return
     state.lookDelta.x += dx
     state.lookDelta.y += dy
   }
@@ -110,12 +119,18 @@ export function bindDesktopInput(target: HTMLElement = document.body): () => voi
   window.addEventListener('keydown', onKeyDown)
   window.addEventListener('keyup', onKeyUp)
   window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mousedown', onMouseDown)
+  window.addEventListener('mouseup', onMouseUp)
+  window.addEventListener('blur', onMouseUp)
   document.addEventListener('pointerlockchange', onPointerLockChange)
 
   return () => {
     window.removeEventListener('keydown', onKeyDown)
     window.removeEventListener('keyup', onKeyUp)
     window.removeEventListener('mousemove', onMouseMove)
+    window.removeEventListener('mousedown', onMouseDown)
+    window.removeEventListener('mouseup', onMouseUp)
+    window.removeEventListener('blur', onMouseUp)
     document.removeEventListener('pointerlockchange', onPointerLockChange)
   }
 }
@@ -123,7 +138,8 @@ export function bindDesktopInput(target: HTMLElement = document.body): () => voi
 export function requestPointerLock(el: HTMLElement): void {
   clearLookDelta()
   state.lookIgnoreUntil = performance.now() + 250
-  void el.requestPointerLock()
+  // Lock can be refused (iframes, previews); drag-to-look still works then
+  Promise.resolve(el.requestPointerLock()).catch(() => {})
 }
 
 export function exitPointerLock(): void {

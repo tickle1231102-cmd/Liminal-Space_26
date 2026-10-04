@@ -156,7 +156,7 @@ export function App() {
       )}
 
       {started && !touch && !pointerLocked && (
-        <div className="hud-resume">클릭해서 조작 복귀 · Esc로 해제</div>
+        <div className="hud-resume">드래그로 둘러보기 · 클릭하면 마우스 잠금 · Esc로 해제</div>
       )}
 
       {started && (
