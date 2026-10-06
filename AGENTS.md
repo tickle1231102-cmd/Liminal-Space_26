@@ -52,6 +52,7 @@
   - `spaces/types.ts` 공간 계약(`SpaceDefinition`), `spaces/registry.ts` 공간 목록
   - `spaces/park` 야간 놀이공원(기본값): `zones/`(정문 광장·미드웨이·먹거리·백스테이지), `objects/`(풍선·탑승 시트), `audio/`, 분위기·파편·절차적 소품
   - `spaces/school` 심야 학교(PRD 12절): `zones/`(현관·복도·급식실·강당/방송실), `objects/`, `audio/`, 키트·텍스처·파편
+  - `spaces/bathhouse` 심야 센토(PRD 13절): `zones/`(겐칸·탈의실·욕실·보일러실), `BathKit`(0단계 화이트박스 키트), 분위기
 - `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<space>/<name>.py`) → `npm run assets:build` → `public/assets/models/<space>/`
 - `public/assets` — glTF/오디오 (출처는 `ATTRIBUTION.md`)
 - `electron/` — Steam용 Electron 셸

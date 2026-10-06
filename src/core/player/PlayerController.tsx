@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber'
 import {
   CapsuleCollider,
-  CuboidCollider,
+  RoundCuboidCollider,
   RigidBody,
   useRapier,
   type RapierRigidBody,
@@ -281,8 +281,8 @@ export function PlayerController({
     >
       {/* Capsule standing on feet at body origin */}
       <CapsuleCollider args={[0.45, 0.32]} position={[0, 0.77, 0]} friction={1} restitution={0} />
-      {/* Wide foot disc to reduce tunneling */}
-      <CuboidCollider args={[0.28, 0.08, 0.28]} position={[0, 0.08, 0]} friction={1.4} />
+      {/* Wide foot disc to reduce tunneling; rounded edges glide over floor seams and ramp joints */}
+      <RoundCuboidCollider args={[0.22, 0.02, 0.22, 0.06]} position={[0, 0.08, 0]} friction={1.4} />
     </RigidBody>
   )
 }
