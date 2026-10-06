@@ -12,11 +12,12 @@ import numpy as np
 
 
 def _image(name, rgba, srgb=True):
+    """rgba rows are bottom-up (row 0 = V 0), matching Blender pixel order."""
     h, w = rgba.shape[:2]
     img = bpy.data.images.new(name, w, h, alpha=False, float_buffer=False)
     if not srgb:
         img.colorspace_settings.name = "Non-Color"
-    img.pixels.foreach_set(np.ascontiguousarray(rgba[::-1], dtype=np.float32).ravel())
+    img.pixels.foreach_set(np.ascontiguousarray(rgba, dtype=np.float32).ravel())
     img.pack()
     return img
 
@@ -151,3 +152,123 @@ def export_pbr_glb(path, quality=88):
         export_image_quality=quality,
     )
     print(f"[asset] wrote {path}")
+
+
+def _periodic_noise(X, Y, period, octaves, rng, amp=1.0):
+    """Sum of sines with integer frequencies: tiles seamlessly over `period`."""
+    out = np.zeros_like(X)
+    k = 2 * np.pi / period
+    for o in range(octaves):
+        fx, fy = rng.randint(1, 4 + 3 * o, size=2)
+        ph = rng.uniform(0, 2 * np.pi, size=2)
+        out += amp / (o + 1) * np.sin(k * fx * X + ph[0]) * np.cos(k * fy * Y + ph[1])
+    return out
+
+
+def wood_textures(name, size=1024, period=1.0, plank=0.125, gap=0.002,
+                  color=(0.42, 0.27, 0.15), jitter=0.12, gloss=0.42, seed=7, grain=1.0):
+    """Vertical-grain planks (grain runs along V). Lacquered: medium gloss, grain shows in normal."""
+    rng = np.random.RandomState(seed)
+    px = period / size
+    u = (np.arange(size) + 0.5) * px
+    X, Y = np.meshgrid(u, u)
+    n_pl = round(period / plank)
+    idx = np.floor(X / plank).astype(int) % n_pl
+    tone = 1 + rng.uniform(-jitter, jitter, n_pl)
+    phase = rng.uniform(0, 10, n_pl)
+    warp = _periodic_noise(X, Y, period, 3, rng, 0.02)
+    # growth rings: stripes across U, warped along V, different per plank
+    rings = np.sin((X * 90 * grain + warp * 8 + phase[idx]) * 2 * np.pi / 3)
+    fine = _periodic_noise(X * 1, Y, period, 4, rng, 1.0)
+    g = 0.5 + 0.5 * rings
+    shade = (0.82 + 0.18 * g + 0.05 * fine)[..., None]
+    rgb = np.array(color) * tone[idx][..., None] * shade
+    edge = np.minimum(X % plank, plank - X % plank)
+    in_pl = edge > gap / 2
+    rgb = np.where(in_pl[..., None], rgb, np.array(color) * 0.35)
+    rgb = np.clip(rgb, 0, 1)
+
+    hz = np.where(in_pl, 0.0004 * g + 0.0006 * np.clip(edge / 0.003, 0, 1), 0.0)
+    gx = (np.roll(hz, -1, 1) - np.roll(hz, 1, 1)) / (2 * px)
+    gy = (np.roll(hz, -1, 0) - np.roll(hz, 1, 0)) / (2 * px)
+    n = np.dstack([-gx, -gy, np.ones_like(gx)])
+    n /= np.linalg.norm(n, axis=2, keepdims=True)
+    rough = np.clip(np.where(in_pl, gloss + 0.12 * (1 - g), 0.9), 0, 1)
+
+    def rgba(c):
+        c = c if c.ndim == 3 else np.dstack([c, c, c])
+        return np.dstack([c, np.ones(c.shape[:2])])
+
+    return {
+        "color": _image(f"{name}_Color", rgba(rgb)),
+        "normal": _image(f"{name}_Normal", rgba(n * 0.5 + 0.5), srgb=False),
+        "rough": _image(f"{name}_Rough", rgba(rough), srgb=False),
+    }
+
+
+def image_textures(name, rgb, tile=None, period=None, gloss=0.12, grout=0.003,
+                   grout_color=(0.7, 0.7, 0.68), edge=0.004):
+    """Non-tiling painted image (e.g. a mural), optionally cut into glazed tiles of `tile` m over a
+    surface `period` = (width, height) m. rgb: float array (H, W, 3), row 0 = top."""
+    h, w = rgb.shape[:2]
+    rgb = rgb[::-1].copy()  # row 0 = bottom, matching V
+    rough = np.full((h, w), gloss)
+    nrm = np.zeros((h, w, 3))
+    nrm[..., 2] = 1
+    if tile:
+        X = (np.arange(w) + 0.5) / w * period[0]
+        Y = (np.arange(h) + 0.5) / h * period[1]
+        X, Y = np.meshgrid(X, Y)
+        dx = np.minimum(X % tile, tile - X % tile)
+        dy = np.minimum(Y % tile, tile - Y % tile)
+        d = np.minimum(dx, dy) - grout / 2
+        inside = d > 0
+        t = np.clip(d / edge, 0, 1)
+        height = np.where(inside, np.sqrt(1 - (1 - t) ** 2), 0.0) * 0.0015
+        pxm = period[0] / w
+        gx = np.gradient(height, axis=1) / pxm
+        gy = np.gradient(height, axis=0) / pxm
+        nrm = np.dstack([-gx, -gy, np.ones_like(gx)])
+        nrm /= np.linalg.norm(nrm, axis=2, keepdims=True)
+        rgb = np.where(inside[..., None], rgb * (0.94 + 0.06 * t[..., None]), np.array(grout_color))
+        rough = np.where(inside, gloss, 0.85)
+
+    def rgba(c):
+        c = c if c.ndim == 3 else np.dstack([c, c, c])
+        return np.dstack([c, np.ones(c.shape[:2])])
+
+    out = {"color": _image(f"{name}_Color", rgba(np.clip(rgb, 0, 1)))}
+    out["normal"] = _image(f"{name}_Normal", rgba(nrm * 0.5 + 0.5), srgb=False)
+    out["rough"] = _image(f"{name}_Rough", rgba(rough), srgb=False)
+    return out
+
+
+def planar_uv(obj, axes=(0, 2), origin=(0.0, 0.0), size=(1.0, 1.0)):
+    """Project onto two object-space axes, mapping origin..origin+size to 0..1 (for one-off images)."""
+    me = obj.data
+    uv = me.uv_layers.active or me.uv_layers.new(name="UVMap")
+    for poly in me.polygons:
+        for li in poly.loop_indices:
+            p = obj.matrix_world @ me.vertices[me.loops[li].vertex_index].co
+            uv.data[li].uv = ((p[axes[0]] - origin[0]) / size[0], (p[axes[1]] - origin[1]) / size[1])
+
+
+def finish(objs, period=1.0, bevel_width=0.006, uv=True, name="Model"):
+    """Common tail for prop scripts: world-scaled UVs, bevel+weighted normals applied, join visuals.
+    Objects whose name starts with COL_ are left alone (colliders)."""
+    bpy.context.view_layer.update()
+    for o in objs:
+        if o.name.startswith("COL_") or o.type != "MESH":
+            continue
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.context.view_layer.objects.active = o
+        o.select_set(True)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        if uv and not o.get("keep_uv"):
+            box_uv(o, period)
+        if bevel_width:
+            bevel(o, width=bevel_width, segments=2)
+            for m in list(o.modifiers):
+                bpy.ops.object.modifier_apply(modifier=m.name)
+    from common import join_visual
+    return join_visual(name, [o for o in objs if o.type == "MESH" and not o.name.startswith("COL_")])

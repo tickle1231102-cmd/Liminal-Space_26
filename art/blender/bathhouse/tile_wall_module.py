@@ -5,19 +5,16 @@ grid continues unbroken across modules (runtime ModuleRun places them at native 
 import math, os, sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from common import *  # noqa: E402,F403
-from quality import tile_textures, pbr_material, box_uv, bevel, export_pbr_glb  # noqa: E402
+from quality import box_uv, bevel, export_pbr_glb  # noqa: E402
+from bath_common import tile_blue, tile_white  # noqa: E402
 
 reset_scene()
 W, H, T = 2.0, 6.0, 0.25
 WAINS = 1.35
 SKIRT = 0.12
 
-blue = pbr_material("TileBlue", tile_textures(
-    "TileBlue", tile=(0.125, 0.125), colors=((0.12, 0.3, 0.42), (0.14, 0.33, 0.45), (0.11, 0.27, 0.39)),
-    grout_color=(0.62, 0.64, 0.62), jitter=0.06, gloss=0.1, seed=3))
-white = pbr_material("TileWhite", tile_textures(
-    "TileWhite", tile=(0.2, 0.2), colors=((0.9, 0.91, 0.88), (0.87, 0.89, 0.86)),
-    grout_color=(0.66, 0.67, 0.64), jitter=0.025, gloss=0.14, seed=5))
+blue = tile_blue()
+white = tile_white()
 cap = material("TileCap", (0.06, 0.16, 0.26), roughness=0.12)
 skirt = material("Skirting", (0.05, 0.09, 0.12), roughness=0.3)
 core = material("WallCore", (0.5, 0.5, 0.48), roughness=0.9)

@@ -1,6 +1,4 @@
-import { useMemo } from 'react'
-import * as THREE from 'three'
-import { Box, Ceiling, Floor, PALETTE, TileWall, WarmLamp, tileTexture } from '../BathKit'
+import { Box, Ceiling, Model, ModuleFloor, TileWall, WarmLamp } from '../BathKit'
 
 const H = 6
 /** 대욕조: 걸어 들어가는 얕은 탕 (바닥 -0.6, 수면 -0.12). */
@@ -9,39 +7,6 @@ const TUB = { x: [-10, 4] as [number, number], z: [-34, -27] as [number, number]
 const RAMP_ANGLE = Math.atan2(0.8, 3.2)
 /** 열탕: 테두리가 높아 들어가지 않는다. */
 const HOT = { x: [6, 11] as [number, number], z: [-34, -29] as [number, number], rim: 0.55 }
-
-/** 후지산 벽화 자리표시 — 2단계에서 타일 벽화 모델로 교체. */
-function muralTexture() {
-  const c = document.createElement('canvas')
-  c.width = 512
-  c.height = 256
-  const g = c.getContext('2d')!
-  const sky = g.createLinearGradient(0, 0, 0, 256)
-  sky.addColorStop(0, '#5f9cc4')
-  sky.addColorStop(1, '#cfe3ea')
-  g.fillStyle = sky
-  g.fillRect(0, 0, 512, 256)
-  g.fillStyle = '#3d5f86'
-  g.beginPath()
-  g.moveTo(80, 230)
-  g.lineTo(256, 50)
-  g.lineTo(432, 230)
-  g.fill()
-  g.fillStyle = '#f4f6f7'
-  g.beginPath()
-  g.moveTo(205, 102)
-  g.lineTo(256, 50)
-  g.lineTo(307, 102)
-  g.lineTo(280, 92)
-  g.lineTo(256, 108)
-  g.lineTo(232, 92)
-  g.fill()
-  g.fillStyle = '#4e7c5a'
-  g.fillRect(0, 222, 512, 34)
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
 
 function Water({
   x,
@@ -72,70 +37,60 @@ function Water({
  * x[-14,14] · z[-36,-10]
  */
 export function BathHallZone() {
-  const floor = useMemo(() => tileTexture(PALETTE.tileWhite, '#9aa3a0', 8, [7, 7]), [])
-  const tubTile = useMemo(() => tileTexture(PALETTE.tileGreen, '#d9e2dc', 8, [3, 1]), [])
-  const mural = useMemo(() => muralTexture(), [])
+  const tubCenter: [number, number, number] = [(TUB.x[0] + TUB.x[1]) / 2, 0, (TUB.z[0] + TUB.z[1]) / 2]
+  const hotCenter: [number, number, number] = [(HOT.x[0] + HOT.x[1]) / 2, 0, (HOT.z[0] + HOT.z[1]) / 2]
 
   return (
     <group name="bathhouse-hall">
-      {/* 대욕조 구멍을 남기고 바닥을 네 조각으로 */}
-      <Floor x={[-14, 14]} z={[-27, -10]} map={floor} color="#ffffff" />
-      <Floor x={[-14, 14]} z={[-36, -34]} map={floor} color="#ffffff" />
-      <Floor x={[-14, TUB.x[0]]} z={TUB.z} map={floor} color="#ffffff" />
-      <Floor x={[TUB.x[1], 14]} z={TUB.z} map={floor} color="#ffffff" />
+      {/* 대욕조 구멍을 남기고 바닥을 네 조각으로 (1 m 타일 모듈) */}
+      <ModuleFloor x={[-14, 14]} z={[-27, -10]} module="floor_tile_module" />
+      <ModuleFloor x={[-14, 14]} z={[-36, -34]} module="floor_tile_module" />
+      <ModuleFloor x={[-14, TUB.x[0]]} z={TUB.z} module="floor_tile_module" />
+      <ModuleFloor x={[TUB.x[1], 14]} z={TUB.z} module="floor_tile_module" />
       <Ceiling x={[-14, 14]} z={[-36, -10]} height={H} color="#cfd6d4" />
 
-      {/* 대욕조: 바닥, 안쪽 벽, 들어가는 계단 */}
-      <Floor x={TUB.x} z={TUB.z} top={TUB.bottom} map={tubTile} color="#ffffff" />
+      {/* 대욕조 — 겉모습은 art/blender/bathhouse/tub.py, 충돌은 여기서 (바닥·안쪽 벽·경사로) */}
+      <Model name="tub" position={tubCenter} />
+      <Box position={[tubCenter[0], TUB.bottom - 0.1, tubCenter[2]]} size={[TUB.x[1] - TUB.x[0], 0.2, TUB.z[1] - TUB.z[0]]} visible={false} />
       {(
         [
-          [[(TUB.x[0] + TUB.x[1]) / 2, TUB.z[1]], [TUB.x[1] - TUB.x[0], 0.1]],
-          [[(TUB.x[0] + TUB.x[1]) / 2, TUB.z[0]], [TUB.x[1] - TUB.x[0], 0.1]],
-          [[TUB.x[0], (TUB.z[0] + TUB.z[1]) / 2], [0.1, TUB.z[1] - TUB.z[0]]],
-          [[TUB.x[1], (TUB.z[0] + TUB.z[1]) / 2], [0.1, TUB.z[1] - TUB.z[0]]],
+          [[tubCenter[0], TUB.z[1]], [TUB.x[1] - TUB.x[0], 0.1]],
+          [[tubCenter[0], TUB.z[0]], [TUB.x[1] - TUB.x[0], 0.1]],
+          [[TUB.x[0], tubCenter[2]], [0.1, TUB.z[1] - TUB.z[0]]],
+          [[TUB.x[1], tubCenter[2]], [0.1, TUB.z[1] - TUB.z[0]]],
         ] as const
       ).map(([[cx, cz], [w, d]]) => (
-        <Box
-          key={`${cx}:${cz}`}
-          position={[cx, TUB.bottom / 2, cz]}
-          size={[w, -TUB.bottom, d]}
-          color={PALETTE.tileGreen}
-        />
+        <Box key={`${cx}:${cz}`} position={[cx, TUB.bottom / 2, cz]} size={[w, -TUB.bottom, d]} visible={false} />
       ))}
-      {/* 들어가는 경사로 — 플레이어 발 콜라이더는 계단을 못 오르므로 경사로 처리 */}
-      {/* 윗면이 욕조 가장자리(y=0)에서 시작해 탕 바닥 아래로 묻히도록 길게 — 끝단 턱에 발이 걸리지 않게 */}
+      {/* 경사로 — 플레이어 발 콜라이더는 계단을 못 오르므로 경사로. 윗면이 가장자리(y=0)에서 시작해 탕 바닥 아래로 묻힌다 */}
       <Box
         position={[-1, -0.4 - 0.1 * Math.cos(RAMP_ANGLE), TUB.z[1] - 1.6]}
         size={[2.4, 0.2, Math.hypot(3.2, 0.8)]}
         rotation={[-RAMP_ANGLE, 0, 0]}
-        color={PALETTE.tileGreen}
+        visible={false}
       />
       <Water x={TUB.x} z={TUB.z} y={TUB.water} />
 
-      {/* 열탕 — 높은 테두리 */}
-      <Box position={[(HOT.x[0] + HOT.x[1]) / 2, HOT.rim / 2, HOT.z[1]]} size={[HOT.x[1] - HOT.x[0], HOT.rim, 0.25]} color={PALETTE.tileGreen} />
-      <Box position={[HOT.x[0], HOT.rim / 2, (HOT.z[0] + HOT.z[1]) / 2]} size={[0.25, HOT.rim, HOT.z[1] - HOT.z[0]]} color={PALETTE.tileGreen} />
-      <Box position={[HOT.x[1], HOT.rim / 2, (HOT.z[0] + HOT.z[1]) / 2]} size={[0.25, HOT.rim, HOT.z[1] - HOT.z[0]]} color={PALETTE.tileGreen} />
-      <Water x={HOT.x} z={HOT.z} y={HOT.rim - 0.08} />
+      {/* 열탕 — 높은 테두리, 콜라이더는 모델의 COL_* */}
+      <Model name="hot_tub" position={hotCenter} />
+      <Water x={[HOT.x[0] + 0.25, HOT.x[1] - 0.25]} z={[HOT.z[0] + 0.25, HOT.z[1] - 0.25]} y={HOT.rim - 0.08} />
 
-      {/* 좌식 샤워 열 — 서쪽 벽면과 가운데 섬 */}
+      {/* 좌식 샤워 — 서쪽 벽면(모델 뒷면이 벽 안쪽 면에 붙는다)과 가운데 등 맞댄 섬 */}
       {[-24, -21, -18, -15, -12].map((z) => (
-        <group key={`w${z}`}>
-          <Box position={[-13.6, 0.55, z]} size={[0.5, 1.1, 2.6]} color={PALETTE.tileWhite} />
-          <Box position={[-13.25, 0.95, z]} size={[0.18, 0.5, 0.36]} color="#cfd4d6" solid={false} />
+        <Model key={`w${z}`} name="shower_unit" position={[-13.875, 0, z]} rotationY={Math.PI / 2} />
+      ))}
+      {[-20.6, -18, -15.4].map((z) => (
+        <group key={`i${z}`}>
+          <Model name="shower_unit" position={[7, 0, z]} rotationY={Math.PI / 2} />
+          <Model name="shower_unit" position={[7, 0, z]} rotationY={-Math.PI / 2} />
         </group>
       ))}
-      <Box position={[7, 0.6, -18]} size={[0.6, 1.2, 9]} color={PALETTE.tileWhite} />
 
       {/* 벽: 서쪽, 동쪽(보일러실 문), 북쪽(벽화) */}
-      {/* 1단계: Blender 타일 벽 모듈 (구간 길이는 2 m 배수) */}
       <TileWall axis="z" at={-14} from={-36} to={-10} />
       <TileWall axis="z" at={14} from={-36} to={-10} gaps={[[-30, -28]]} />
       <TileWall axis="x" at={-36} from={-14} to={14} />
-      <mesh position={[0, 3.6, -35.83]}>
-        <planeGeometry args={[18, 4.4]} />
-        <meshStandardMaterial map={mural} roughness={0.4} />
-      </mesh>
+      <Model name="mural" position={[0, 3.6, -35.86]} />
 
       <WarmLamp position={[-6, H - 0.5, -16]} intensity={7} distance={14} />
       <WarmLamp position={[6, H - 0.5, -16]} intensity={7} distance={14} />

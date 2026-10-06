@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import { Box, Ceiling, Floor, PALETTE, TileWall, Wall, WarmLamp, tileTexture } from '../BathKit'
+import { Ceiling, Model, ModuleFloor, TileWall, Wall, WarmLamp } from '../BathKit'
 
 const H = 3.2
 
@@ -8,39 +7,35 @@ const H = 3.2
  * x[-10,10] · z[-10,8]
  */
 export function DressingZone() {
-  const floor = useMemo(() => tileTexture('#b39a74', '#7d6a50', 4, [5, 4]), [])
-
   return (
     <group name="bathhouse-dressing">
-      <Floor x={[-10, 10]} z={[-10, 8]} map={floor} color="#ffffff" />
+      <ModuleFloor x={[-10, 10]} z={[-10, 8]} module="floor_wood_module" />
       <Ceiling x={[-10, 10]} z={[-10, 8]} height={H} />
 
       <Wall axis="z" at={-10} from={-10} to={8} height={H} />
       <Wall axis="z" at={10} from={-10} to={8} height={H} />
 
-      {/* 반다이 — 남탕/여탕을 함께 내려다보는 높은 접수대 */}
-      <Box position={[3.2, 0.6, 6.4]} size={[1.6, 1.2, 1.2]} color={PALETTE.woodDark} />
-      <Box position={[3.2, 1.25, 6.4]} size={[1.8, 0.08, 1.4]} color={PALETTE.wood} />
+      {/* 반다이 — 입구를 내려다보는 높은 접수대 (입구 쪽 -X를 본다) */}
+      <Model name="bandai" position={[3.2, 0, 6.4]} rotationY={-Math.PI / 2} />
 
-      {/* 나무 락커 — 좌우 벽면 */}
-      {[-9.55, 9.55].map((x) =>
+      {/* 나무 락커 — 좌우 벽 안쪽 면(±9.875)에 등을 댄다 */}
+      {[-1, 1].map((side) =>
         [-6, -2, 2].map((z) => (
-          <Box key={`${x}:${z}`} position={[x, 1, z]} size={[0.7, 2, 3.4]} color={PALETTE.wood} />
+          <Model
+            key={`${side}:${z}`}
+            name="locker_bank"
+            position={[side * 9.525, 0, z]}
+            rotationY={side < 0 ? Math.PI / 2 : -Math.PI / 2}
+          />
         )),
       )}
 
-      {/* 가운데 평상 두 개 */}
-      <Box position={[-2.6, 0.22, -1]} size={[1.2, 0.44, 4]} color={PALETTE.wood} />
-      <Box position={[2.6, 0.22, -1]} size={[1.2, 0.44, 4]} color={PALETTE.wood} />
+      {/* 가운데 긴 의자 두 개 */}
+      <Model name="bench" position={[-2.6, 0, -1]} rotationY={Math.PI / 2} />
+      <Model name="bench" position={[2.6, 0, -1]} rotationY={Math.PI / 2} />
 
-      {/* 우유 냉장고 — 안쪽에서 희미하게 빛난다 */}
-      <Box
-        position={[-8.6, 0.9, 6.6]}
-        size={[1, 1.8, 0.8]}
-        color="#e8eef0"
-        emissive="#cfe8ff"
-        emissiveIntensity={0.25}
-      />
+      {/* 우유 냉장고 — 안쪽 조명이 탈의실 구석을 희미하게 밝힌다 */}
+      <Model name="milk_fridge" position={[-9.475, 0, 6.6]} rotationY={Math.PI / 2} />
 
       {/* 욕실과의 경계 벽 — 욕실 쪽 면이 타일이라 같은 모듈을 쓴다 */}
       <TileWall axis="x" at={-10} from={-14} to={14} gaps={[[-2, 2]]} />

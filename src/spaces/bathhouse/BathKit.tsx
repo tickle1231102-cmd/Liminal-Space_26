@@ -1,6 +1,6 @@
 import { Suspense, useMemo } from 'react'
-import { ModuleRun, spaceModel } from '../../core/world/GltfAsset'
-import { RigidBody } from '@react-three/rapier'
+import { GltfAsset, GltfInstances, ModuleRun, spaceModel } from '../../core/world/GltfAsset'
+import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
 
 /**
@@ -31,6 +31,8 @@ type BoxProps = {
   /** false면 충돌 없이 보이기만 한다 */
   solid?: boolean
   rotation?: [number, number, number]
+  /** false면 콜라이더만 두고 그리지 않는다 (Blender 모델이 겉모습을 맡을 때) */
+  visible?: boolean
 }
 
 /** 고정 콜라이더를 가진 박스 한 덩어리. */
@@ -45,7 +47,15 @@ export function Box({
   emissiveIntensity = 0,
   solid = true,
   rotation,
+  visible = true,
 }: BoxProps) {
+  if (!visible) {
+    return (
+      <RigidBody type="fixed" colliders={false} position={position} rotation={rotation}>
+        <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} />
+      </RigidBody>
+    )
+  }
   const mesh = (
     <mesh castShadow receiveShadow position={solid ? undefined : position} rotation={solid ? undefined : rotation}>
       <boxGeometry args={size} />
@@ -281,6 +291,57 @@ export function TileWall({
           />
         )
       })}
+    </>
+  )
+}
+
+/** Blender 모델 하나 배치 (COL_* 콜라이더 포함). */
+export function Model({
+  name,
+  position,
+  rotationY = 0,
+}: {
+  name: string
+  position: [number, number, number]
+  rotationY?: number
+}) {
+  return (
+    <Suspense fallback={null}>
+      <GltfAsset url={bathModel(name)} position={position} rotationY={rotationY} />
+    </Suspense>
+  )
+}
+
+/**
+ * 1 m 바닥 모듈(art/blender/bathhouse/floor_*_module.py)을 격자로 깐 바닥. 충돌은 한 장짜리 박스.
+ * 범위는 정수 m여야 줄눈이 맞는다.
+ */
+export function ModuleFloor({
+  x,
+  z,
+  top = 0,
+  module,
+}: {
+  x: [number, number]
+  z: [number, number]
+  top?: number
+  module: 'floor_tile_module' | 'floor_wood_module' | 'floor_stone_module'
+}) {
+  const items = useMemo(() => {
+    const out: { position: [number, number, number] }[] = []
+    for (let i = x[0]; i < x[1]; i++) for (let k = z[0]; k < z[1]; k++) out.push({ position: [i + 0.5, top, k + 0.5] })
+    return out
+  }, [x, z, top])
+  return (
+    <>
+      <Box
+        position={[(x[0] + x[1]) / 2, top - 0.1, (z[0] + z[1]) / 2]}
+        size={[x[1] - x[0], 0.2, z[1] - z[0]]}
+        visible={false}
+      />
+      <Suspense fallback={null}>
+        <GltfInstances url={bathModel(module)} items={items} />
+      </Suspense>
     </>
   )
 }

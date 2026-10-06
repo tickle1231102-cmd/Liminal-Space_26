@@ -1,5 +1,4 @@
-import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { Box, Ceiling, Floor, PALETTE, Wall, WarmLamp } from '../BathKit'
+import { Box, Ceiling, Floor, Model, PALETTE, Wall, WarmLamp } from '../BathKit'
 
 const H = 2.6
 
@@ -17,16 +16,8 @@ export function BoilerZone() {
       <Wall axis="x" at={-36} from={14} to={26} height={H} color="#7a756c" />
       <Wall axis="x" at={-20} from={14} to={26} height={H} color="#7a756c" />
 
-      {/* 보일러 본체 */}
-      <group position={[22.5, 0, -32]}>
-        <mesh position={[0, 1.1, 0]} castShadow>
-          <cylinderGeometry args={[1.1, 1.1, 2.2, 20]} />
-          <meshStandardMaterial color={PALETTE.steel} roughness={0.5} metalness={0.5} />
-        </mesh>
-        <RigidBody type="fixed" colliders={false}>
-          <CuboidCollider args={[0.8, 1.1, 0.8]} position={[0, 1.1, 0]} />
-        </RigidBody>
-      </group>
+      {/* 보일러 본체 — art/blender/bathhouse/boiler.py */}
+      <Model name="boiler" position={[22.5, 0, -32]} />
 
       {/* 천장을 지나는 배관 */}
       {[-0.5, 0.1, 0.7].map((dx, i) => (

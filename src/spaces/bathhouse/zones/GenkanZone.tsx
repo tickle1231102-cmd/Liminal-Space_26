@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { Box, Ceiling, Floor, PALETTE, Wall, WarmLamp, tileTexture } from '../BathKit'
+import { Box, Ceiling, Model, ModuleFloor, PALETTE, Wall, WarmLamp } from '../BathKit'
 
 const H = 3
 
@@ -30,12 +30,11 @@ function norenTexture() {
  * x[-6,6] · z[8,20]
  */
 export function GenkanZone() {
-  const floor = useMemo(() => tileTexture('#8d8a82', '#5d5a54', 6, [3, 3]), [])
   const noren = useMemo(() => norenTexture(), [])
 
   return (
     <group name="bathhouse-genkan">
-      <Floor x={[-6, 6]} z={[8, 20]} map={floor} color="#ffffff" />
+      <ModuleFloor x={[-6, 6]} z={[8, 20]} module="floor_stone_module" />
       <Ceiling x={[-6, 6]} z={[8, 20]} height={H} color={PALETTE.wood} />
 
       <Wall axis="z" at={-6} from={8} to={20} height={H} />
@@ -51,10 +50,15 @@ export function GenkanZone() {
         <meshStandardMaterial map={noren} side={THREE.DoubleSide} roughness={0.95} />
       </mesh>
 
-      {/* 나무 열쇠 신발장 두 줄 */}
-      {[-5.45, 5.45].map((x) =>
+      {/* 나무 열쇠 신발장 두 줄 — 벽 안쪽 면(±5.875)에 등을 대고 안쪽을 본다 */}
+      {[-1, 1].map((side) =>
         [10.5, 14, 17.5].map((z) => (
-          <Box key={`${x}:${z}`} position={[x, 0.95, z]} size={[0.8, 1.9, 3]} color={PALETTE.wood} />
+          <Model
+            key={`${side}:${z}`}
+            name="shoe_locker"
+            position={[side * 5.475, 0, z]}
+            rotationY={side < 0 ? Math.PI / 2 : -Math.PI / 2}
+          />
         )),
       )}
 
