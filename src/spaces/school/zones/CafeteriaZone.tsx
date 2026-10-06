@@ -6,10 +6,10 @@ import {
   Fluorescent,
   Slab,
   WallPanel,
-} from './SchoolKit'
-import { GltfAsset, schoolModel } from '../GltfAsset'
-import { noticeTexture, tileMap } from './schoolTextures'
-import { useSchoolLights } from './SchoolProps'
+} from '../SchoolKit'
+import { GltfAsset, schoolModel } from '../../../core/world/GltfAsset'
+import { noticeTexture, tileMap } from '../schoolTextures'
+import { useSchoolLights } from '../SchoolProps'
 import { CAFETERIA_GAP } from './CorridorZone'
 
 /**

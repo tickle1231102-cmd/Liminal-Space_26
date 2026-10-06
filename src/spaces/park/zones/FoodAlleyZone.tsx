@@ -1,10 +1,10 @@
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import seedrandom from 'seedrandom'
 import { Suspense, useMemo } from 'react'
-import { useWorldSeed } from '../proc/WorldSeedContext'
-import { asphaltMap, neonSignTexture } from './procTextures'
-import { NeonBar } from './Atmosphere'
-import { GltfAsset, GltfInstances, parkModel, useGltfAnchors, type GltfAnchor, type InstanceXform } from './GltfAsset'
+import { useWorldSeed } from '../../../core/proc/WorldSeedContext'
+import { asphaltMap, neonSignTexture } from '../procTextures'
+import { NeonBar } from '../Atmosphere'
+import { GltfAsset, GltfInstances, parkModel, useGltfAnchors, type GltfAnchor, type InstanceXform } from '../../../core/world/GltfAsset'
 
 type Vec3 = [number, number, number]
 

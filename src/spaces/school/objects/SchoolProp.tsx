@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
-import { useInteraction } from '../player/InteractionContext'
-import type { SchoolPropKind } from '../proc/createSchoolDecor'
-import { GltfVisual, schoolModel } from '../world/GltfAsset'
+import { useInteraction } from '../../../core/player/InteractionContext'
+import type { SchoolPropKind } from '../createSchoolDecor'
+import { GltfVisual, schoolModel } from '../../../core/world/GltfAsset'
 
 type SchoolPropProps = {
   id: string

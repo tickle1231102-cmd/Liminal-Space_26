@@ -22,7 +22,7 @@
    - 모바일 배포: Capacitor
    - 데스크톱(Steam) 배포: Electron
 4. **폴백은 Godot(GDScript/C#) 하나만 고려한다.** 모바일 WebView 성능이 프로토타입 체크포인트에서 기준 미달일 경우에만 전환을 검토하며, 검토 없이 임의 전환하지 않는다.
-5. **3D 모델링은 Blender 헤드리스 Python 스크립트로 작성한다.** `art/blender/<zone>/<name>.py`가 원본이고, `npm run assets:build`(Blender `-b -P`)로 `public/assets/models/<zone>/<name>.glb`를 생성한다. `.blend` 바이너리를 원본으로 두지 않는다. 이름 규칙: `COL_*` 메시 = 런타임에서 숨기고 Rapier 큐보이드로 변환, `ANCHOR_*` 엠티 = 시드 배치용 스폰 포인트(`src/world/GltfAsset.tsx`). 외부 에셋은 라이선스가 명확한 것(Kenney, Poly Haven, Sketchfab, Freesound 등)만 쓰고 `public/assets/ATTRIBUTION.md`에 기록한다. 사운드 원본 녹음은 코드 작업 범위 밖이다.
+5. **3D 모델링은 Blender 헤드리스 Python 스크립트로 작성한다.** `art/blender/<space>/<name>.py`가 원본이고, `npm run assets:build`(Blender `-b -P`)로 `public/assets/models/<space>/<name>.glb`를 생성한다. `.blend` 바이너리를 원본으로 두지 않는다. 이름 규칙: `COL_*` 메시 = 런타임에서 숨기고 Rapier 큐보이드로 변환, `ANCHOR_*` 엠티 = 시드 배치용 스폰 포인트(`src/core/world/GltfAsset.tsx`). 외부 에셋은 라이선스가 명확한 것(Kenney, Poly Haven, Sketchfab, Freesound 등)만 쓰고 `public/assets/ATTRIBUTION.md`에 기록한다. 사운드 원본 녹음은 코드 작업 범위 밖이다.
 6. **배포 대상은 App Store(iOS), Google Play(Android), Steam(Win/Mac) 세 곳 동시 출시가 목표다.** 기능/UI 설계 시 세 스토어의 입력 방식(터치 vs. WASD+마우스)과 심사 요건(개인정보 라벨, IARC 등급, Steamworks 연령 게이트)을 모두 고려한다. 한 플랫폼만 고려한 설계 변경은 피한다.
 
 ## 게임 디자인 원칙 (변경 시 PRD.md와 함께 갱신)
@@ -45,19 +45,37 @@
 - `PRD.md` — 제품 요구사항 문서 원본 (한글)
 - `docs/prd.html` — PRD의 Artifact 렌더링본 (시각 자료, 참고용 스냅샷)
 - `docs/STORE_CHECKLIST.md` — 3스토어 출시 체크리스트
-- `src/app` — 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지
-- `src/player` — 1인칭 컨트롤러, 상호작용
-- `src/world` — 구역 배치(정문·미드웨이·먹거리·백스테이지), 파편, 절차적 소품. 기본 도형 화이트박스를 `GltfAsset`으로 단계적으로 교체 중
-- `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<zone>/<name>.py`) → `npm run assets:build` → `public/assets/models`
-- `src/world/school` — 심야 학교(PRD 12절) 구역: 현관·신발장, 중앙 복도·계단, 급식실, 강당·방송실. `src/app/scene.ts`의 씬 스위치로 놀이공원(기본값)과 전환한다(`?scene=school`).
-- `src/objects` — 풍선·탑승 시트 등 물리 오브젝트
-- `src/audio` — 피치 워블 / 앰비언스
-- `src/proc` — seedrandom 기반 재시드
-- `src/input` — 키보드·마우스·터치 추상화
+- `src/app` — 앱 셸: 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지. 공간은 `spaces/registry`로만 안다.
+- `src/core` — 모든 공간이 공유하는 엔진 계층. 특정 공간을 몰라야 한다.
+  - `core/player` 1인칭 컨트롤러·상호작용·탑승 상태 / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`
+- `src/spaces` — 공간(버전)별 코드. 아래 "공간 구조" 절 참고.
+  - `spaces/types.ts` 공간 계약(`SpaceDefinition`), `spaces/registry.ts` 공간 목록
+  - `spaces/park` 야간 놀이공원(기본값): `zones/`(정문 광장·미드웨이·먹거리·백스테이지), `objects/`(풍선·탑승 시트), `audio/`, 분위기·파편·절차적 소품
+  - `spaces/school` 심야 학교(PRD 12절): `zones/`(현관·복도·급식실·강당/방송실), `objects/`, `audio/`, 키트·텍스처·파편
+- `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<space>/<name>.py`) → `npm run assets:build` → `public/assets/models/<space>/`
 - `public/assets` — glTF/오디오 (출처는 `ATTRIBUTION.md`)
 - `electron/` — Steam용 Electron 셸
 - `capacitor.config.json` — iOS/Android Capacitor 래핑 설정
 - `scripts/perf-checkpoint.mjs` — 모바일 성능 go/no-go 리포트
+
+## 공간 구조 (여러 공간 버전)
+
+이 프로젝트는 하나의 앱 안에 여러 "공간"(놀이공원, 심야 학교, 이후 추가될 공간)을 둔다. 공간끼리 충돌하지 않도록 다음을 지킨다.
+
+- **공간 ID 하나로 모든 위치를 맞춘다.** `<id>`(소문자 kebab-case)는 `src/spaces/<id>/`, `art/blender/<id>/`, `public/assets/models/<id>/`, URL `?space=<id>`에 똑같이 쓴다.
+- **import 경계** (`npm run check:spaces`, `npm run build`에 포함되어 위반 시 빌드 실패):
+  - `spaces/<a>` → `spaces/<b>` 금지. 두 공간에 필요한 코드는 `src/core`로 올린다.
+  - `core` → `spaces` 금지 (`spaces/types`만 허용).
+  - `app` → `spaces/registry`, `spaces/types`만 허용.
+- **공간이 소유하는 것**: 구역 배치, 소품, 분위기 조명, 후처리(EffectComposer), 공간 전용 오디오, 내러티브 파편, 시작 화면 문구, 스폰 위치·클리어 색·노출. 앱 셸에 `if (space === ...)` 분기를 추가하지 않고 `SpaceDefinition` 필드로 표현한다.
+- **같은 파일명 허용**: 공간 폴더가 네임스페이스이므로 `park/zones/BackstageZone.tsx`와 `school/zones/BackstageZone.tsx`가 공존해도 된다.
+- **새 공간 추가 절차**
+  1. `src/spaces/<id>/index.ts`에 `SpaceDefinition` 작성 (`load: () => import('./<Name>World')`, 월드 컴포넌트는 `default export`)
+  2. `src/spaces/<id>/<Name>World.tsx`와 `zones/`, `objects/`, `audio/` 등 작성
+  3. `src/spaces/registry.ts`의 `SPACES`에 한 줄 추가 (첫 항목이 기본 공간)
+  4. 모델은 `art/blender/<id>/*.py` → `npm run assets:build`, 출처는 `public/assets/ATTRIBUTION.md`
+  5. 이 절의 구조 목록과 PRD에 공간 설명을 추가
+- 공간별 작업은 `space/<id>-<작업>` 형태의 브랜치에서 하고 `main`으로 병합한다.
 
 ## Claude Code / Cursor 역할 분담
 
@@ -73,6 +91,6 @@
 ## 기술 세칙
 
 - Capacitor WebView(iOS/Android)와 Electron `BrowserWindow`(Steam) 양쪽 모두, Rapier WASM 멀티스레딩(SharedArrayBuffer)을 쓰려면 COOP(`same-origin`)/COEP(`require-corp`) 헤더를 활성화해야 한다.
-- 플랫폼별 분기가 필요한 로직은 `src/input` 같은 기존 추상화 계층 관례를 따르고, 게임 코어 로직(`src/player`, `src/world`, `src/objects` 등)에 플랫폼 전용 API를 직접 끌어들이지 않는다.
+- 플랫폼별 분기가 필요한 로직은 `src/core/input` 같은 기존 추상화 계층 관례를 따르고, 게임 코어 로직(`src/core/player`, `src/core/world`, `src/spaces` 등)에 플랫폼 전용 API를 직접 끌어들이지 않는다.
 
 

@@ -1,6 +1,6 @@
 """Shared helpers for headless Blender asset scripts.
 
-Naming contract with the runtime (src/world/GltfAsset.tsx):
+Naming contract with the runtime (src/core/world/GltfAsset.tsx):
   COL_*     box collider, hidden at runtime, becomes a Rapier cuboid
   ANCHOR_*  empty marking a prop spawn point for seeded placement
 """

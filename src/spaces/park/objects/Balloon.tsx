@@ -7,8 +7,8 @@ import {
 import { useGLTF } from '@react-three/drei'
 import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import { useInteraction } from '../player/InteractionContext'
-import { parkModel } from '../world/GltfAsset'
+import { useInteraction } from '../../../core/player/InteractionContext'
+import { parkModel } from '../../../core/world/GltfAsset'
 
 type BalloonProps = {
   id?: string

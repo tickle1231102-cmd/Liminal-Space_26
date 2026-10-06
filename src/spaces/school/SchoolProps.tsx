@@ -1,7 +1,7 @@
 import { Suspense, useMemo } from 'react'
-import { createSchoolDecor, type SchoolZoneName } from '../../proc/createSchoolDecor'
-import { useWorldSeed } from '../../proc/WorldSeedContext'
-import { SchoolProp } from '../../objects/SchoolProp'
+import { createSchoolDecor, type SchoolZoneName } from './createSchoolDecor'
+import { useWorldSeed } from '../../core/proc/WorldSeedContext'
+import { SchoolProp } from './objects/SchoolProp'
 
 /** 구역 재진입/재시드 때 흐트러짐만 다시 뿌린다 — 동선과 랜드마크는 고정. */
 export function SchoolProps({ zone }: { zone: SchoolZoneName }) {

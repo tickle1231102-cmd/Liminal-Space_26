@@ -7,19 +7,20 @@ import {
   type ComfortSettings,
 } from './comfort'
 import { detectPlatform, isTouchPrimary } from './platform'
-import { loadScene, type SceneId } from './scene'
+import { SPACES, getSpace, loadSpaceId } from '../spaces/registry'
 import {
   bindDesktopInput,
   pressReseed,
   requestPointerLock,
   setLookSensitivity,
-} from '../input/controls'
+} from '../core/input/controls'
 
 export function App() {
   const [started, setStarted] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [comfort, setComfort] = useState<ComfortSettings>(() => loadComfortSettings())
-  const [scene, setScene] = useState<SceneId>(() => loadScene())
+  const [spaceId, setSpaceId] = useState(() => loadSpaceId())
+  const space = getSpace(spaceId)
   const [pointerLocked, setPointerLocked] = useState(false)
   const platform = detectPlatform()
   const touch = isTouchPrimary()
@@ -88,11 +89,11 @@ export function App() {
   return (
     <div className="app-shell">
       <GameCanvas
-        key={scene}
+        key={space.id}
         comfort={comfort}
         audioEnabled={audioEnabled}
         started={started}
-        scene={scene}
+        space={space}
       />
       <TouchControls enabled={started} />
 
@@ -107,47 +108,39 @@ export function App() {
           }}
         >
           <div className="hud-overlay-card">
-            <h1>{scene === 'school' ? 'After Hours — 심야 학교' : 'After Hours'}</h1>
-            {scene === 'school' ? (
-              <>
-                <p>야자 시간이 끝나지 않은 학교. 형광등은 그대로 켜져 있다.</p>
-                <p>현관에서 시작해 중앙 복도로, 급식실과 강당·방송실로 이어집니다.</p>
-                <p>
-                  {touch
-                    ? '탭해서 입장 — 스틱 이동 · 드래그 시점 · JUMP / E'
-                    : 'WASD 이동 · Space 점프 · 마우스 시점 · E 밀기/끌기 · R 재시드'}
-                </p>
-              </>
-            ) : (
-              <>
-                <p>폐장하지 않은 야간 놀이공원. 목표도 대사도 없다.</p>
-                <p>빛나는 길을 따라가면 관람차(MIDWAY) 게이트로 이어집니다.</p>
-                <p>
-                  {touch
-                    ? '탭해서 입장 — 스틱 이동 · 드래그 시점 · JUMP / E'
-                    : 'WASD 이동 · Space 점프 · 마우스 시점 · E 상호작용 · R 재시드'}
-                </p>
-              </>
-            )}
-            <button
-              type="button"
-              style={{
-                marginTop: '0.4rem',
-                background: 'transparent',
-                color: 'rgba(232,228,216,0.7)',
-                border: '1px solid rgba(232,228,216,0.22)',
-                padding: '0.35rem 0.7rem',
-                fontSize: '0.72rem',
-                letterSpacing: '0.08em',
-                cursor: 'pointer',
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                setScene((s) => (s === 'school' ? 'park' : 'school'))
-              }}
-            >
-              {scene === 'school' ? '놀이공원 프로토타입으로' : '심야 학교로'}
-            </button>
+            <h1>{space.title}</h1>
+            {space.intro.map((line) => (
+              <p key={line}>{line}</p>
+            ))}
+            <p>
+              {touch
+                ? '탭해서 입장 — 스틱 이동 · 드래그 시점 · JUMP / E'
+                : `WASD 이동 · Space 점프 · 마우스 시점 · E ${space.interactVerb} · R 재시드`}
+            </p>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+              {SPACES.filter((s) => s.id !== space.id).map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  style={{
+                    marginTop: '0.4rem',
+                    background: 'transparent',
+                    color: 'rgba(232,228,216,0.7)',
+                    border: '1px solid rgba(232,228,216,0.22)',
+                    padding: '0.35rem 0.7rem',
+                    fontSize: '0.72rem',
+                    letterSpacing: '0.08em',
+                    cursor: 'pointer',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSpaceId(s.id)
+                  }}
+                >
+                  {s.name}로 →
+                </button>
+              ))}
+            </div>
             <p style={{ opacity: 0.45, fontSize: '0.8rem' }}>
               platform: {platform} · [ ] FOV · M reduce motion · F3 FPS
             </p>

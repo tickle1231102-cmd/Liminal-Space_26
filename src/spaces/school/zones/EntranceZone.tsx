@@ -7,10 +7,10 @@ import {
   Slab,
   WallPanel,
   WallWithGap,
-} from './SchoolKit'
-import { GltfAsset, schoolModel } from '../GltfAsset'
-import { linoleumMap, lockerLabelTexture, noticeTexture } from './schoolTextures'
-import { useSchoolLights } from './SchoolProps'
+} from '../SchoolKit'
+import { GltfAsset, schoolModel } from '../../../core/world/GltfAsset'
+import { linoleumMap, lockerLabelTexture, noticeTexture } from '../schoolTextures'
+import { useSchoolLights } from '../SchoolProps'
 
 /**
  * 현관·신발장 (원작의 정문 광장). 진입점이자 톤 설정 구역.

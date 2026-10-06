@@ -1,9 +1,9 @@
 import { MeshReflectorMaterial } from '@react-three/drei'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { Suspense, useMemo, type ReactNode } from 'react'
-import { asphaltMap, neonSignTexture, roughnessNoise } from './procTextures'
-import { NeonBar } from './Atmosphere'
-import { GltfAsset, GltfInstances, ModuleRun, parkModel } from './GltfAsset'
+import { asphaltMap, neonSignTexture, roughnessNoise } from '../procTextures'
+import { NeonBar } from '../Atmosphere'
+import { GltfAsset, GltfInstances, ModuleRun, parkModel } from '../../../core/world/GltfAsset'
 
 const BOLLARDS: [number, number, number][] = [-34, -28, -22, -16, -10, -4, 2, 8, 14].flatMap((z) =>
   [-3.9, 3.9].map((x): [number, number, number] => [x, 0, z]),

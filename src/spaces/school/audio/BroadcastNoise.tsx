@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { PitchWobbleBed } from './PitchWobble'
+import { PitchWobbleBed } from '../../../core/audio/PitchWobble'
 
 /** 방송실 콘솔 위치 — 여기서 멀어질수록 잡음이 잦아든다. */
 const SOURCE = new THREE.Vector3(-4, 1.5, -39.5)

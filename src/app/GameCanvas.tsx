@@ -1,139 +1,64 @@
-import { Suspense, useCallback, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useMemo, useState, type ComponentType } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
-import {
-  EffectComposer,
-  Vignette,
-  Bloom,
-  Noise,
-  ChromaticAberration,
-  SMAA,
-} from '@react-three/postprocessing'
-import { BlendFunction } from 'postprocessing'
 import * as THREE from 'three'
-import { PlayerController } from '../player/PlayerController'
-import { InteractionProvider } from '../player/InteractionProvider'
-import { DistanceLod } from '../world/DistanceLod'
-import { Atmosphere } from '../world/Atmosphere'
-import { PlazaZone } from '../world/PlazaZone'
-import { MidwayZone } from '../world/MidwayZone'
-import { FoodAlleyZone } from '../world/FoodAlleyZone'
-import { BackstageZone } from '../world/BackstageZone'
-import { ProceduralProps, useBalloonTint } from '../world/ProceduralProps'
-import { NarrativeFragments } from '../world/NarrativeFragments'
-import { Balloon } from '../objects/Balloon'
-import { RideAudioSource } from '../audio/RideAudioSource'
-import { WorldSeedContext } from '../proc/WorldSeedContext'
-import type { ComfortSettings } from '../app/comfort'
-import { PerfSampler } from '../app/PerfHud'
-import { Crosshair } from '../app/Hud'
-import { useInteraction } from '../player/InteractionContext'
-import { SchoolWorld, SCHOOL_SPAWN } from '../world/school/SchoolWorld'
-import type { SceneId } from './scene'
+import { PlayerController } from '../core/player/PlayerController'
+import { InteractionProvider } from '../core/player/InteractionProvider'
+import { useInteraction } from '../core/player/InteractionContext'
+import { WorldSeedContext } from '../core/proc/WorldSeedContext'
+import type { SpaceDefinition, SpaceWorldProps } from '../spaces/types'
+import type { ComfortSettings } from './comfort'
+import { PerfSampler } from './PerfHud'
+import { Crosshair } from './Hud'
 
 type GameSceneProps = {
   comfort: ComfortSettings
   audioEnabled: boolean
   started: boolean
-  scene: SceneId
+  space: SpaceDefinition
+}
+
+// lazy()는 모듈 수준에서 공간당 한 번만 만든다 — 렌더 중에 만들면 Suspense 재시도마다 새로 생겨 영원히 로딩된다.
+const worldCache = new Map<string, ComponentType<SpaceWorldProps>>()
+function worldFor(space: SpaceDefinition) {
+  let World = worldCache.get(space.id)
+  if (!World) {
+    World = lazy(space.load)
+    worldCache.set(space.id, World)
+  }
+  return World
 }
 
 function WorldContent({
   comfort,
   audioEnabled,
   started,
-  scene,
+  space,
   onReseed,
 }: {
   comfort: ComfortSettings
   audioEnabled: boolean
   started: boolean
-  scene: SceneId
+  space: SpaceDefinition
   onReseed: () => void
 }) {
-  const tint = useBalloonTint('plaza')
-  const chroma = useMemo(() => new THREE.Vector2(0.0006, 0.0006), [])
-
-  if (scene === 'school') {
-    return (
-      <>
-        <SchoolWorld reduceMotion={comfort.reduceMotion} audioEnabled={audioEnabled} />
-        <PlayerController
-          spawn={SCHOOL_SPAWN}
-          comfort={comfort}
-          onReseed={onReseed}
-          controlsEnabled={started}
-        />
-        {!comfort.reduceMotion && (
-          <EffectComposer multisampling={0} enableNormalPass={false}>
-            <SMAA />
-            <Bloom
-              intensity={0.22}
-              luminanceThreshold={0.8}
-              luminanceSmoothing={0.35}
-              mipmapBlur
-            />
-            <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.06} />
-            <Vignette offset={0.35} darkness={0.34} />
-          </EffectComposer>
-        )}
-        <PerfSampler visible={comfort.showFps} />
-      </>
-    )
-  }
+  const World = worldFor(space)
 
   return (
     <>
-      <Atmosphere reduceMotion={comfort.reduceMotion} />
-      <PlazaZone>
-        <ProceduralProps zone="plaza" />
-      </PlazaZone>
-      <DistanceLod center={[0, 0, -42]} near={60}>
-        <MidwayZone>
-          <ProceduralProps zone="midway" />
-        </MidwayZone>
-      </DistanceLod>
-      <DistanceLod center={[42, 0, 0]} near={55}>
-        <FoodAlleyZone />
-      </DistanceLod>
-      <DistanceLod center={[-42, 0, -10]} near={55}>
-        <BackstageZone />
-      </DistanceLod>
-      <NarrativeFragments />
-      <Balloon color={tint} position={[2.8, 1.6, 5]} />
-      <Balloon color="#5ec8e8" position={[-3.2, 2.0, 3]} id="balloon-1" />
-      <Balloon color="#f2d36b" position={[5.5, 1.4, 7]} id="balloon-2" />
+      <World reduceMotion={comfort.reduceMotion} audioEnabled={audioEnabled} />
       <PlayerController
+        spawn={space.spawn}
         comfort={comfort}
         onReseed={onReseed}
         controlsEnabled={started}
       />
-      <RideAudioSource enabled={audioEnabled} />
-      {!comfort.reduceMotion && (
-        <EffectComposer multisampling={0} enableNormalPass={false}>
-          <SMAA />
-          <Bloom
-            intensity={0.4}
-            luminanceThreshold={0.65}
-            luminanceSmoothing={0.4}
-            mipmapBlur
-          />
-          <ChromaticAberration
-            blendFunction={BlendFunction.NORMAL}
-            offset={chroma}
-            radialModulation={false}
-            modulationOffset={0}
-          />
-          <Noise premultiply blendFunction={BlendFunction.SOFT_LIGHT} opacity={0.08} />
-          <Vignette offset={0.4} darkness={0.28} />
-        </EffectComposer>
-      )}
       <PerfSampler visible={comfort.showFps} />
     </>
   )
 }
 
-export function GameCanvas({ comfort, audioEnabled, started, scene }: GameSceneProps) {
+export function GameCanvas({ comfort, audioEnabled, started, space }: GameSceneProps) {
   const [seed, setSeed] = useState('after-hours-proto')
   const [generation, setGeneration] = useState(0)
 
@@ -157,16 +82,16 @@ export function GameCanvas({ comfort, audioEnabled, started, scene }: GameSceneP
             fov: comfort.fov,
             near: 0.1,
             far: 140,
-            position: scene === 'school' ? [0, 1.7, 18] : [0, 1.7, 12],
+            position: [space.spawn[0], 1.7, space.spawn[2] + 2],
           }}
           gl={{
             antialias: !comfort.reduceMotion,
             powerPreference: 'high-performance',
           }}
           onCreated={({ gl }) => {
-            gl.setClearColor(scene === 'school' ? '#0b0e14' : '#07090f')
+            gl.setClearColor(space.clearColor)
             gl.toneMapping = THREE.ACESFilmicToneMapping
-            gl.toneMappingExposure = scene === 'school' ? 1.15 : 1.45
+            gl.toneMappingExposure = space.exposure
             gl.shadowMap.enabled = !comfort.reduceMotion
             gl.shadowMap.type = THREE.PCFSoftShadowMap
           }}
@@ -177,7 +102,7 @@ export function GameCanvas({ comfort, audioEnabled, started, scene }: GameSceneP
                 comfort={comfort}
                 audioEnabled={audioEnabled}
                 started={started}
-                scene={scene}
+                space={space}
                 onReseed={reseed}
               />
             </Physics>

@@ -8,10 +8,10 @@ import {
   Fluorescent,
   Slab,
   WallPanel,
-} from './SchoolKit'
-import { GltfAsset, schoolModel } from '../GltfAsset'
-import { chalkboardTexture, linoleumMap, noticeTexture } from './schoolTextures'
-import { useSchoolLights } from './SchoolProps'
+} from '../SchoolKit'
+import { GltfAsset, schoolModel } from '../../../core/world/GltfAsset'
+import { chalkboardTexture, linoleumMap, noticeTexture } from '../schoolTextures'
+import { useSchoolLights } from '../SchoolProps'
 
 /** 복도에서 교실로 분기되는 지점 — 좌(-1) / 우(+1). */
 const CLASSROOM_DOORS: Array<{ z: number; side: -1 | 1 }> = [

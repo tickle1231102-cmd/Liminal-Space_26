@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "After Hours — liminal amusement park walking simulator",
+  "description": "After Hours — liminal-space walking simulator (multiple spaces: park, school, ...)",
   "scripts": {
     "dev": "node scripts/dev-server.mjs start",
     "dev:restart": "node scripts/dev-server.mjs restart",
@@ -11,13 +11,14 @@
     "dev:stop": "node scripts/dev-server.mjs stop",
     "dev:status": "node scripts/dev-server.mjs status",
     "dev:fix": "node scripts/dev-server.mjs fix",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/check-spaces.mjs && tsc -b && vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5173 --strictPort",
     "cap:sync": "npm run build && npx cap sync",
     "electron:dev": "electron electron/main.cjs",
     "perf:report": "node scripts/perf-checkpoint.mjs",
     "assets:build": "node scripts/build-assets.mjs build",
-    "assets:watch": "node scripts/build-assets.mjs --watch"
+    "assets:watch": "node scripts/build-assets.mjs --watch",
+    "check:spaces": "node scripts/check-spaces.mjs"
   },
   "dependencies": {
     "@capacitor/core": "^7.4.2",

@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
 import { useGLTF } from '@react-three/drei'
-import { GltfAsset, ModuleRun, schoolModel } from '../GltfAsset'
+import { GltfAsset, ModuleRun, schoolModel } from '../../core/world/GltfAsset'
 
 export const CEILING_H = 3.4
 

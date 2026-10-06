@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { PitchWobbleBed } from './PitchWobble'
+import { PitchWobbleBed } from '../../../core/audio/PitchWobble'
 
 export function RideAudioSource({ enabled }: { enabled: boolean }) {
   const bed = useRef(new PitchWobbleBed())

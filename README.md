@@ -57,7 +57,7 @@ npm run cap:sync             # Capacitor 동기화 (빌드 후)
 
 ### 3D 모델 (Blender)
 
-모델은 `art/blender/<zone>/<name>.py` Python 스크립트가 원본입니다. Blender(5.x)를 화면 없이 실행해 `public/assets/models/<zone>/<name>.glb`를 만듭니다. 생성된 `.glb`도 커밋하므로 웹/모바일/스팀 빌드에는 Blender가 필요 없습니다.
+모델은 `art/blender/<space>/<name>.py` Python 스크립트가 원본입니다. Blender(5.x)를 화면 없이 실행해 `public/assets/models/<space>/<name>.glb`를 만듭니다. 생성된 `.glb`도 커밋하므로 웹/모바일/스팀 빌드에는 Blender가 필요 없습니다.
 
 ```bash
 npm run assets:build         # 전체 재생성 (특정 모델만: npm run assets:build -- bench)

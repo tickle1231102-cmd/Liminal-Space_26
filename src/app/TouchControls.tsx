@@ -4,7 +4,7 @@ import {
   pressInteract,
   pressJump,
   setTouchMove,
-} from '../input/controls'
+} from '../core/input/controls'
 import { isTouchPrimary } from './platform'
 
 export function TouchControls({ enabled }: { enabled: boolean }) {

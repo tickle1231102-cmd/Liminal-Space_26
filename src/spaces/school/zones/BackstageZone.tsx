@@ -8,10 +8,10 @@ import {
   Slab,
   WallSlab,
   WallPanel,
-} from './SchoolKit'
-import { GltfAsset, GltfInstances, schoolModel } from '../GltfAsset'
-import { gymFloorMap, linoleumMap, noticeTexture } from './schoolTextures'
-import { useSchoolLights } from './SchoolProps'
+} from '../SchoolKit'
+import { GltfAsset, GltfInstances, schoolModel } from '../../../core/world/GltfAsset'
+import { gymFloorMap, linoleumMap, noticeTexture } from '../schoolTextures'
+import { useSchoolLights } from '../SchoolProps'
 import { BACKSTAGE_GAP } from './CorridorZone'
 
 /**

@@ -1,7 +1,7 @@
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { Suspense } from 'react'
-import { NeonBar } from './Atmosphere'
-import { GltfAsset, GltfInstances, ModuleRun, parkModel } from './GltfAsset'
+import { NeonBar } from '../Atmosphere'
+import { GltfAsset, GltfInstances, ModuleRun, parkModel } from '../../../core/world/GltfAsset'
 
 const FIXTURES_Z = [-14, -7, 0, 7, 14]
 const CRATES: [number, number, number][] = [

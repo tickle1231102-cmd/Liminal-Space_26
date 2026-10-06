@@ -2,9 +2,9 @@ import { createPortal, useFrame, useThree } from '@react-three/fiber'
 import { CuboidCollider, RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { useInteraction } from '../player/InteractionContext'
-import { rideState } from '../player/rideState'
-import { GltfVisual } from '../world/GltfAsset'
+import { useInteraction } from '../../../core/player/InteractionContext'
+import { rideState } from '../../../core/player/rideState'
+import { GltfVisual } from '../../../core/world/GltfAsset'
 
 type RideSeatProps = {
   id: string

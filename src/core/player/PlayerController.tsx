@@ -11,7 +11,7 @@ import * as THREE from 'three'
 import { sampleInput } from '../input/controls'
 import { useInteraction } from './InteractionContext'
 import { rideState } from './rideState'
-import type { ComfortSettings } from '../app/comfort'
+import type { ComfortSettings } from '../../app/comfort'
 
 const WALK_SPEED = 3.4
 const SPRINT_SPEED = 5.4

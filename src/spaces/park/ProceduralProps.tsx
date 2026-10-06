@@ -1,7 +1,7 @@
 import { Suspense, useMemo } from 'react'
-import { createZoneDecor, type PropSpawn } from '../proc/createZoneDecor'
-import { GltfVisual, parkModel } from './GltfAsset'
-import { useWorldSeed } from '../proc/WorldSeedContext'
+import { createZoneDecor, type PropSpawn } from './createZoneDecor'
+import { GltfVisual, parkModel } from '../../core/world/GltfAsset'
+import { useWorldSeed } from '../../core/proc/WorldSeedContext'
 import { RigidBody } from '@react-three/rapier'
 
 const KIND_MODEL: Record<PropSpawn['kind'], string> = {

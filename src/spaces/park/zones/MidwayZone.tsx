@@ -1,8 +1,8 @@
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import { Suspense, useMemo, type ReactNode } from 'react'
-import { asphaltMap } from './procTextures'
-import { NeonBar } from './Atmosphere'
-import { GltfAnimated, GltfAsset, parkModel } from './GltfAsset'
+import { asphaltMap } from '../procTextures'
+import { NeonBar } from '../Atmosphere'
+import { GltfAnimated, GltfAsset, parkModel } from '../../../core/world/GltfAsset'
 import { RideSeat } from '../objects/RideSeat'
 import type * as THREE from 'three'
 
