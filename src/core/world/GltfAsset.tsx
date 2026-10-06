@@ -71,6 +71,9 @@ export function GltfAsset({
 }
 
 export const parkModel = (name: string) => `${import.meta.env.BASE_URL}assets/models/park/${name}.glb`
+/** public/assets/models/<space>/<name>.glb — 새 공간은 이것을 쓴다 */
+export const spaceModel = (space: string, name: string) =>
+  `${import.meta.env.BASE_URL}assets/models/${space}/${name}.glb`
 export const schoolModel = (name: string) => `${import.meta.env.BASE_URL}assets/models/school/${name}.glb`
 
 export type InstanceXform = { position: [number, number, number]; rotationY?: number; scale?: [number, number, number] }

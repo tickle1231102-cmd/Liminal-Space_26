@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { Box, Ceiling, Floor, PALETTE, Wall, WarmLamp, tileTexture } from '../BathKit'
+import { Box, Ceiling, Floor, PALETTE, TileWall, WarmLamp, tileTexture } from '../BathKit'
 
 const H = 6
 /** 대욕조: 걸어 들어가는 얕은 탕 (바닥 -0.6, 수면 -0.12). */
@@ -73,7 +73,6 @@ function Water({
  */
 export function BathHallZone() {
   const floor = useMemo(() => tileTexture(PALETTE.tileWhite, '#9aa3a0', 8, [7, 7]), [])
-  const wall = useMemo(() => tileTexture(PALETTE.tileBlue, '#e8ecea', 10, [6, 2]), [])
   const tubTile = useMemo(() => tileTexture(PALETTE.tileGreen, '#d9e2dc', 8, [3, 1]), [])
   const mural = useMemo(() => muralTexture(), [])
 
@@ -129,10 +128,11 @@ export function BathHallZone() {
       <Box position={[7, 0.6, -18]} size={[0.6, 1.2, 9]} color={PALETTE.tileWhite} />
 
       {/* 벽: 서쪽, 동쪽(보일러실 문), 북쪽(벽화) */}
-      <Wall axis="z" at={-14} from={-36} to={-10} height={H} map={wall} color="#ffffff" />
-      <Wall axis="z" at={14} from={-36} to={-10} height={H} gaps={[[-30, -27.5]]} map={wall} color="#ffffff" />
-      <Wall axis="x" at={-36} from={-14} to={14} height={H} map={wall} color="#ffffff" />
-      <mesh position={[0, 3.6, -35.86]}>
+      {/* 1단계: Blender 타일 벽 모듈 (구간 길이는 2 m 배수) */}
+      <TileWall axis="z" at={-14} from={-36} to={-10} />
+      <TileWall axis="z" at={14} from={-36} to={-10} gaps={[[-30, -28]]} />
+      <TileWall axis="x" at={-36} from={-14} to={14} />
+      <mesh position={[0, 3.6, -35.83]}>
         <planeGeometry args={[18, 4.4]} />
         <meshStandardMaterial map={mural} roughness={0.4} />
       </mesh>

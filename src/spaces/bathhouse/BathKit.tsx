@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { Suspense, useMemo } from 'react'
+import { ModuleRun, spaceModel } from '../../core/world/GltfAsset'
 import { RigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
 
@@ -218,4 +219,68 @@ function shade(hex: string, delta: number) {
   const n = parseInt(hex.slice(1), 16)
   const ch = (s: number) => Math.max(0, Math.min(255, ((n >> s) & 255) + delta))
   return `rgb(${ch(16)},${ch(8)},${ch(0)})`
+}
+
+export const bathModel = (name: string) => spaceModel('bathhouse', name)
+
+/** art/blender/bathhouse/tile_wall_module.py — 2 m 모듈, 높이 6 m, 두께 0.25 m (원래 크기로 배치). */
+const TILE_WALL = { url: bathModel('tile_wall_module'), length: 2, height: 6, thickness: 0.25 }
+
+/**
+ * 욕실 타일 벽. 구간 길이는 2 m 배수로 잡아야 타일 줄눈이 모듈 사이에서 이어진다.
+ * 문 구간 위 상인방은 흰 타일 색 박스로 채운다(1단계 임시).
+ */
+export function TileWall({
+  axis,
+  at,
+  from,
+  to,
+  gaps = [],
+}: {
+  axis: 'x' | 'z'
+  at: number
+  from: number
+  to: number
+  gaps?: [number, number][]
+}) {
+  const runs: [number, number][] = []
+  let cursor = from
+  for (const [g0, g1] of [...gaps].sort((p, q) => p[0] - q[0])) {
+    if (g0 > cursor) runs.push([cursor, g0])
+    cursor = g1
+  }
+  if (to > cursor) runs.push([cursor, to])
+  const pt = (v: number): [number, number] => (axis === 'x' ? [v, at] : [at, v])
+  const h = TILE_WALL.height
+  return (
+    <>
+      <Suspense fallback={null}>
+        {runs.map(([a, b]) => (
+          <ModuleRun
+            key={`${a}:${b}`}
+            url={TILE_WALL.url}
+            from={pt(a)}
+            to={pt(b)}
+            module={TILE_WALL.length}
+            height={h}
+            thickness={TILE_WALL.thickness}
+            fit={{ height: h, thickness: TILE_WALL.thickness }}
+          />
+        ))}
+      </Suspense>
+      {gaps.map(([g0, g1]) => {
+        const mid = (g0 + g1) / 2
+        const lh = h - DOOR_H
+        return (
+          <Box
+            key={`lintel${g0}`}
+            position={axis === 'x' ? [mid, DOOR_H + lh / 2, at] : [at, DOOR_H + lh / 2, mid]}
+            size={axis === 'x' ? [g1 - g0, lh, TILE_WALL.thickness] : [TILE_WALL.thickness, lh, g1 - g0]}
+            color="#c9cdc8"
+            roughness={0.3}
+          />
+        )
+      })}
+    </>
+  )
 }

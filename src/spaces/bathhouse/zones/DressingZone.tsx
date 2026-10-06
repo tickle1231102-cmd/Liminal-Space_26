@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Box, Ceiling, Floor, PALETTE, Wall, WarmLamp, tileTexture } from '../BathKit'
+import { Box, Ceiling, Floor, PALETTE, TileWall, Wall, WarmLamp, tileTexture } from '../BathKit'
 
 const H = 3.2
 
@@ -42,16 +42,8 @@ export function DressingZone() {
         emissiveIntensity={0.25}
       />
 
-      {/* 욕실로 이어지는 유리 미닫이 벽 (높이는 욕실 천장까지) */}
-      <Wall
-        axis="x"
-        at={-10}
-        from={-14}
-        to={14}
-        height={6}
-        gaps={[[-2, 2]]}
-        color={PALETTE.tileWhite}
-      />
+      {/* 욕실과의 경계 벽 — 욕실 쪽 면이 타일이라 같은 모듈을 쓴다 */}
+      <TileWall axis="x" at={-10} from={-14} to={14} gaps={[[-2, 2]]} />
 
       <WarmLamp position={[0, H - 0.3, 3]} intensity={5} />
       <WarmLamp position={[0, H - 0.3, -5]} intensity={5} />
