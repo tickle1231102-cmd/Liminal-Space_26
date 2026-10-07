@@ -1,7 +1,7 @@
 import { Box, Ceiling, Model, ModuleFloor, TileWall, WarmLamp } from '../BathKit'
 import { Water } from '../Water'
+import { SHOWER_Z } from '../createBathDecor'
 import { Steam } from '../Steam'
-import { FloatingProp } from '../FloatingProp'
 import type { SpaceWorldProps } from '../../types'
 
 const H = 6
@@ -53,19 +53,6 @@ export function BathHallZone({ reduceMotion, quality }: Pick<SpaceWorldProps, 'r
       <Water id="tub" x={TUB.x} z={TUB.z} y={TUB.water} floor={TUB.bottom} reduceMotion={reduceMotion} />
       <Steam x={TUB.x} z={TUB.z} y={TUB.water} count={Math.round(90 * steam)} reduceMotion={reduceMotion} />
 
-      {/* 떠다니는 오리와 바가지 — 부력으로 수면에 뜬다 */}
-      {(
-        [
-          ['rubber_duck', [-6.5, 0.2, -30]],
-          ['rubber_duck', [-2.2, 0.2, -32.4]],
-          ['rubber_duck', [1.8, 0.2, -29.2]],
-          ['oke', [-8.2, 0.2, -31.6]],
-          ['oke', [-4.4, 0.2, -28.6]],
-        ] as const
-      ).map(([kind, p], i) => (
-        <FloatingProp key={i} kind={kind} position={[...p]} rotationY={i * 1.3} />
-      ))}
-
       {/* 열탕 — 높은 테두리, 콜라이더는 모델의 COL_* */}
       <Model name="hot_tub" position={hotCenter} />
       <Water
@@ -81,7 +68,7 @@ export function BathHallZone({ reduceMotion, quality }: Pick<SpaceWorldProps, 'r
       <Steam x={[HOT.x[0] + 0.3, HOT.x[1] - 0.3]} z={[HOT.z[0] + 0.3, HOT.z[1] - 0.3]} y={HOT.rim - 0.08} count={Math.round(60 * steam)} opacity={0.08} reduceMotion={reduceMotion} />
 
       {/* 좌식 샤워 — 서쪽 벽면(모델 뒷면이 벽 안쪽 면에 붙는다)과 가운데 등 맞댄 섬 */}
-      {[-24, -21, -18, -15, -12].map((z) => (
+      {SHOWER_Z.map((z) => (
         <Model key={`w${z}`} name="shower_unit" position={[-13.875, 0, z]} rotationY={Math.PI / 2} />
       ))}
       {[-20.6, -18, -15.4].map((z) => (

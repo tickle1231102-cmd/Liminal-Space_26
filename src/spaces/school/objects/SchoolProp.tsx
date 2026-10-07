@@ -1,8 +1,6 @@
-import { useEffect, useRef } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useRef } from 'react'
 import { RigidBody, type RapierRigidBody } from '@react-three/rapier'
-import * as THREE from 'three'
-import { useInteraction } from '../../../core/player/InteractionContext'
+import { useDraggable } from '../../../core/objects/useDraggable'
 import type { SchoolPropKind } from '../createSchoolDecor'
 import { GltfVisual, schoolModel } from '../../../core/world/GltfAsset'
 
@@ -52,57 +50,7 @@ const MODEL: Record<SchoolPropKind, string> = {
  */
 export function SchoolProp({ id, kind, position, rotationY = 0 }: SchoolPropProps) {
   const body = useRef<RapierRigidBody>(null)
-  const interaction = useInteraction()
-  const { camera } = useThree()
-  const target = useRef(new THREE.Vector3())
-  const prev = useRef(new THREE.Vector3())
-  const vel = useRef(new THREE.Vector3())
-  const dir = useRef(new THREE.Vector3())
-
-  useEffect(() => {
-    interaction.register({ id, kind: 'push', label: LABEL[kind], body })
-    return () => interaction.unregister(id)
-  }, [id, kind, interaction])
-
-  const held = interaction.heldId === id
-
-  useFrame((_, dt) => {
-    const rb = body.current
-    if (!rb || !held) return
-
-    dir.current.set(0, 0, -1).applyQuaternion(camera.quaternion)
-    dir.current.y = 0
-    if (dir.current.lengthSq() < 1e-4) return
-    dir.current.normalize()
-
-    target.current
-      .set(camera.position.x, DRAG_HEIGHT, camera.position.z)
-      .addScaledVector(dir.current, 1.25)
-
-    vel.current
-      .copy(target.current)
-      .sub(prev.current)
-      .multiplyScalar(1 / Math.max(dt, 1 / 120))
-    prev.current.copy(target.current)
-
-    rb.setNextKinematicTranslation({
-      x: target.current.x,
-      y: target.current.y,
-      z: target.current.z,
-    })
-
-    if (vel.current.length() > RELEASE_SPEED) {
-      interaction.setHeldId(null)
-      rb.setLinvel(
-        {
-          x: vel.current.x * 0.3,
-          y: 0,
-          z: vel.current.z * 0.3,
-        },
-        true,
-      )
-    }
-  })
+  const held = useDraggable(id, LABEL[kind], body, { dragHeight: DRAG_HEIGHT, releaseSpeed: RELEASE_SPEED })
 
   return (
     <RigidBody

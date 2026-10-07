@@ -7,18 +7,27 @@ import { GenkanZone } from './zones/GenkanZone'
 import { DressingZone } from './zones/DressingZone'
 import { BathHallZone } from './zones/BathHallZone'
 import { BoilerZone } from './zones/BoilerZone'
+import { BathProps } from './BathProps'
+import { BathFragments } from './BathFragments'
+import { BathAudio } from './BathAudio'
 
 /**
  * 심야 센토 — PRD 13절. 겐칸 → 반다이·탈의실 → 욕실 → 보일러실·사우나.
  * 0단계 화이트박스: 동선·스케일·콜라이더만 확정한다.
  */
-export default function BathhouseWorld({ reduceMotion, quality }: SpaceWorldProps) {
+export default function BathhouseWorld({ reduceMotion, audioEnabled, quality }: SpaceWorldProps) {
   return (
     <>
       <BathAtmosphere reduceMotion={reduceMotion} />
       <GenkanZone />
       <DressingZone />
       <BathHallZone reduceMotion={reduceMotion} quality={quality} />
+      <BathProps zone="genkan" />
+      <BathProps zone="dressing" />
+      <BathProps zone="hall" />
+      <BathProps zone="tub" />
+      <BathFragments />
+      <BathAudio enabled={audioEnabled} />
       <DistanceLod center={[20, 0, -28]} near={40}>
         <BoilerZone />
       </DistanceLod>

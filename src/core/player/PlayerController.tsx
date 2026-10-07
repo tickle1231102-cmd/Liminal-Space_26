@@ -75,6 +75,9 @@ export function PlayerController({
   }, [camera, comfort.fov])
 
   // Dev-only console handle for testing far-off spots: __afterHours.teleport(x, y, z, yaw)
+  // state()는 ref로 최신 컨텍스트를 읽는다 (effect 클로저의 값은 한 박자 늦을 수 있다)
+  const live = useRef(interaction)
+  live.current = interaction
   useEffect(() => {
     if (!import.meta.env.DEV) return
     const w = window as unknown as Record<string, unknown>
@@ -89,8 +92,12 @@ export function PlayerController({
       state: () => ({
         pos: body.current?.translation(),
         yaw: yaw.current,
-        focused: interaction.focused?.id ?? null,
-        held: interaction.heldId,
+        focused: live.current.focused?.id ?? null,
+        held: live.current.heldId,
+        nearby: interaction
+          .getAll()
+          .map((i) => ({ id: i.id, at: i.body.current?.translation() }))
+          .filter((i) => i.at && Math.hypot(i.at.x - (body.current?.translation().x ?? 0), i.at.z - (body.current?.translation().z ?? 0)) < 3),
         rides: interaction
           .getAll()
           .filter((i) => i.kind === 'ride')
