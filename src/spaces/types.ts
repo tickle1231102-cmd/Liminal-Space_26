@@ -6,6 +6,8 @@ export type Vec3 = [number, number, number]
 export type SpaceWorldProps = {
   reduceMotion: boolean
   audioEnabled: boolean
+  /** 'low' = 모바일(터치 기기) 프리셋: 파티클·후처리·텍스처 부담을 줄인다 */
+  quality: 'high' | 'low'
 }
 
 /**

@@ -11,6 +11,7 @@ import * as THREE from 'three'
 import { sampleInput } from '../input/controls'
 import { useInteraction } from './InteractionContext'
 import { rideState } from './rideState'
+import { submergedDepth } from '../world/water'
 import type { ComfortSettings } from '../../app/comfort'
 
 const WALK_SPEED = 3.4
@@ -21,6 +22,8 @@ const EYE_HEIGHT = 1.55
 const INTERACT_RANGE = 2.6
 /** Seated eye height above the seat point. */
 const SEATED_EYE = 0.75
+/** 물속 이동 속도 배율 (허벅지 깊이 이상에서 최저) */
+const WADE_SPEED = 0.5
 /** Rigid body origin sits at feet; collider rises above. */
 const SPAWN: [number, number, number] = [0, 0.15, 10]
 
@@ -41,6 +44,8 @@ export function PlayerController({
   const yaw = useRef(0)
   const pitch = useRef(0)
   const groundedFrames = useRef(0)
+  const wadeRef = useRef(0)
+  const wadePhase = useRef(0)
   const { camera, scene } = useThree()
   const interaction = useInteraction()
   const focusScratch = useRef(new THREE.Vector3())
@@ -186,10 +191,15 @@ export function PlayerController({
       camera.rotation.order = 'YXZ'
       camera.rotation.y = yaw.current
       camera.rotation.x = pitch.current
+      camera.rotation.z = 0
       return
     }
 
-    const speed = input.sprint ? SPRINT_SPEED : WALK_SPEED
+    // 물에 들어가면 깊이에 비례해 느려진다 (core/world/water에 등록된 영역)
+    const here = rb.translation()
+    const wade = Math.min(1, submergedDepth(here.x, here.y, here.z) / 0.5)
+    const speed = (input.sprint ? SPRINT_SPEED : WALK_SPEED) * (1 - (1 - WADE_SPEED) * wade)
+    wadeRef.current = wade
     forward.current.set(-Math.sin(yaw.current), 0, -Math.cos(yaw.current))
     right.current.set(Math.cos(yaw.current), 0, -Math.sin(yaw.current))
     wish.current
@@ -223,10 +233,15 @@ export function PlayerController({
     else if (t.y > 0.55 || linvel.y > 0.4) groundedFrames.current = 0
     else groundedFrames.current = Math.max(0, groundedFrames.current - 1)
 
-    camera.position.set(t.x, t.y + EYE_HEIGHT, t.z)
+    // 물속에서는 걸음마다 느리게 흔들린다 (reduceMotion이면 생략)
+    const moving = wish.current.lengthSq() > 0
+    wadePhase.current += moving ? 3.2 * (1 / 60) : 0
+    const sway = comfort.reduceMotion ? 0 : wadeRef.current * 0.03 * Math.sin(wadePhase.current)
+    camera.position.set(t.x, t.y + EYE_HEIGHT + sway, t.z)
     camera.rotation.order = 'YXZ'
     camera.rotation.y = yaw.current
     camera.rotation.x = pitch.current
+    camera.rotation.z = comfort.reduceMotion ? 0 : wadeRef.current * 0.012 * Math.sin(wadePhase.current * 0.5)
 
     const origin = camera.position
     const dir = focusScratch.current

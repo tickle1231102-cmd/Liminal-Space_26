@@ -1,4 +1,8 @@
 import { Box, Ceiling, Model, ModuleFloor, TileWall, WarmLamp } from '../BathKit'
+import { Water } from '../Water'
+import { Steam } from '../Steam'
+import { FloatingProp } from '../FloatingProp'
+import type { SpaceWorldProps } from '../../types'
 
 const H = 6
 /** 대욕조: 걸어 들어가는 얕은 탕 (바닥 -0.6, 수면 -0.12). */
@@ -8,35 +12,12 @@ const RAMP_ANGLE = Math.atan2(0.8, 3.2)
 /** 열탕: 테두리가 높아 들어가지 않는다. */
 const HOT = { x: [6, 11] as [number, number], z: [-34, -29] as [number, number], rim: 0.55 }
 
-function Water({
-  x,
-  z,
-  y,
-}: {
-  x: [number, number]
-  z: [number, number]
-  y: number
-}) {
-  return (
-    <mesh position={[(x[0] + x[1]) / 2, y, (z[0] + z[1]) / 2]} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[x[1] - x[0], z[1] - z[0]]} />
-      <meshStandardMaterial
-        color="#5fa6a8"
-        transparent
-        opacity={0.55}
-        roughness={0.05}
-        metalness={0.1}
-        depthWrite={false}
-      />
-    </mesh>
-  )
-}
-
 /**
  * 욕실 — 원작의 먹거리 골목. 천장이 높고 넓으며 물리 오브젝트가 모이는 곳.
  * x[-14,14] · z[-36,-10]
  */
-export function BathHallZone() {
+export function BathHallZone({ reduceMotion, quality }: Pick<SpaceWorldProps, 'reduceMotion' | 'quality'>) {
+  const steam = quality === 'high' ? 1 : 0.35
   const tubCenter: [number, number, number] = [(TUB.x[0] + TUB.x[1]) / 2, 0, (TUB.z[0] + TUB.z[1]) / 2]
   const hotCenter: [number, number, number] = [(HOT.x[0] + HOT.x[1]) / 2, 0, (HOT.z[0] + HOT.z[1]) / 2]
 
@@ -69,11 +50,35 @@ export function BathHallZone() {
         rotation={[-RAMP_ANGLE, 0, 0]}
         visible={false}
       />
-      <Water x={TUB.x} z={TUB.z} y={TUB.water} />
+      <Water id="tub" x={TUB.x} z={TUB.z} y={TUB.water} floor={TUB.bottom} reduceMotion={reduceMotion} />
+      <Steam x={TUB.x} z={TUB.z} y={TUB.water} count={Math.round(90 * steam)} reduceMotion={reduceMotion} />
+
+      {/* 떠다니는 오리와 바가지 — 부력으로 수면에 뜬다 */}
+      {(
+        [
+          ['rubber_duck', [-6.5, 0.2, -30]],
+          ['rubber_duck', [-2.2, 0.2, -32.4]],
+          ['rubber_duck', [1.8, 0.2, -29.2]],
+          ['oke', [-8.2, 0.2, -31.6]],
+          ['oke', [-4.4, 0.2, -28.6]],
+        ] as const
+      ).map(([kind, p], i) => (
+        <FloatingProp key={i} kind={kind} position={[...p]} rotationY={i * 1.3} />
+      ))}
 
       {/* 열탕 — 높은 테두리, 콜라이더는 모델의 COL_* */}
       <Model name="hot_tub" position={hotCenter} />
-      <Water x={[HOT.x[0] + 0.25, HOT.x[1] - 0.25]} z={[HOT.z[0] + 0.25, HOT.z[1] - 0.25]} y={HOT.rim - 0.08} />
+      <Water
+        id="hot"
+        x={[HOT.x[0] + 0.25, HOT.x[1] - 0.25]}
+        z={[HOT.z[0] + 0.25, HOT.z[1] - 0.25]}
+        y={HOT.rim - 0.08}
+        floor={0}
+        color="#5a9a94"
+        reduceMotion={reduceMotion}
+      />
+      {/* 열탕은 김이 더 짙다 */}
+      <Steam x={[HOT.x[0] + 0.3, HOT.x[1] - 0.3]} z={[HOT.z[0] + 0.3, HOT.z[1] - 0.3]} y={HOT.rim - 0.08} count={Math.round(60 * steam)} opacity={0.08} reduceMotion={reduceMotion} />
 
       {/* 좌식 샤워 — 서쪽 벽면(모델 뒷면이 벽 안쪽 면에 붙는다)과 가운데 등 맞댄 섬 */}
       {[-24, -21, -18, -15, -12].map((z) => (

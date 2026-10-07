@@ -10,6 +10,11 @@ import type { SpaceDefinition, SpaceWorldProps } from '../spaces/types'
 import type { ComfortSettings } from './comfort'
 import { PerfSampler } from './PerfHud'
 import { Crosshair } from './Hud'
+import { detectPlatform, isTouchPrimary } from './platform'
+
+/** 모바일(Capacitor·터치 기기)은 저사양 프리셋 */
+const QUALITY: SpaceWorldProps['quality'] =
+  detectPlatform() === 'capacitor' || isTouchPrimary() ? 'low' : 'high'
 
 type GameSceneProps = {
   comfort: ComfortSettings
@@ -46,7 +51,7 @@ function WorldContent({
 
   return (
     <>
-      <World reduceMotion={comfort.reduceMotion} audioEnabled={audioEnabled} />
+      <World reduceMotion={comfort.reduceMotion} audioEnabled={audioEnabled} quality={QUALITY} />
       <PlayerController
         spawn={space.spawn}
         comfort={comfort}

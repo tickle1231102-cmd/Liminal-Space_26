@@ -1,5 +1,5 @@
 import { Suspense, useMemo } from 'react'
-import { GltfAsset, GltfInstances, ModuleRun, spaceModel } from '../../core/world/GltfAsset'
+import { GltfAsset, GltfInstances, GltfVisual, ModuleRun, spaceModel } from '../../core/world/GltfAsset'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import * as THREE from 'three'
 
@@ -179,7 +179,10 @@ export function Wall({
   )
 }
 
-/** 따뜻한 백열등: 발광 갓 + 그림자 없는 포인트 라이트. */
+/**
+ * 법랑 갓 펜던트 등 (art/blender/bathhouse/pendant_lamp.py) + 그림자 없는 포인트 라이트.
+ * position = 전구 위치.
+ */
 export function WarmLamp({
   position,
   intensity = 6,
@@ -193,11 +196,10 @@ export function WarmLamp({
 }) {
   return (
     <group position={position}>
-      <mesh>
-        <sphereGeometry args={[0.14, 12, 10]} />
-        <meshStandardMaterial color="#fff1dc" emissive={color} emissiveIntensity={2.4} />
-      </mesh>
-      <pointLight color={color} intensity={intensity} distance={distance} decay={1.6} />
+      <Suspense fallback={null}>
+        <GltfVisual url={bathModel('pendant_lamp')} />
+      </Suspense>
+      <pointLight position={[0, -0.08, 0]} color={color} intensity={intensity} distance={distance} decay={1.6} />
     </group>
   )
 }
