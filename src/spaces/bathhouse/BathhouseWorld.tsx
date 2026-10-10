@@ -19,7 +19,7 @@ export default function BathhouseWorld({ reduceMotion, audioEnabled, quality }: 
   return (
     <>
       <BathAtmosphere reduceMotion={reduceMotion} />
-      <GenkanZone />
+      <GenkanZone reduceMotion={reduceMotion} />
       <DressingZone />
       <BathHallZone reduceMotion={reduceMotion} quality={quality} />
       <BathProps zone="genkan" />

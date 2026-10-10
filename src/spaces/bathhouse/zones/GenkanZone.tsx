@@ -1,36 +1,14 @@
-import { useMemo } from 'react'
-import * as THREE from 'three'
+import { ModelBoundary } from '../../../core/world/ModelBoundary'
+import { Noren } from '../Noren'
 import { Box, Ceiling, Model, ModuleFloor, PALETTE, Wall, WarmLamp } from '../BathKit'
 
 const H = 3
-
-/** 남색 노렌에 흰 'ゆ' — 탈의실로 들어가는 입구 표시. */
-function norenTexture() {
-  const c = document.createElement('canvas')
-  c.width = 256
-  c.height = 192
-  const g = c.getContext('2d')!
-  g.fillStyle = '#1f2f4f'
-  g.fillRect(0, 0, 256, 192)
-  g.fillStyle = '#f2efe6'
-  g.font = 'bold 110px serif'
-  g.textAlign = 'center'
-  g.textBaseline = 'middle'
-  g.fillText('ゆ', 128, 100)
-  // 세 폭으로 갈라진 틈
-  g.fillStyle = '#0c1220'
-  for (const x of [85, 171]) g.fillRect(x - 1, 40, 2, 152)
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
-}
 
 /**
  * 노렌 입구·신발장(겐칸) — 원작의 정문 광장. 바깥 유리문은 열리지 않는다.
  * x[-6,6] · z[8,20]
  */
-export function GenkanZone() {
-  const noren = useMemo(() => norenTexture(), [])
+export function GenkanZone({ reduceMotion }: { reduceMotion: boolean }) {
 
   return (
     <group name="bathhouse-genkan">
@@ -45,10 +23,9 @@ export function GenkanZone() {
 
       {/* 탈의실 쪽 벽과 노렌 */}
       <Wall axis="x" at={8} from={-10} to={10} height={3.2} gaps={[[-1.5, 1.5]]} surface="Plaster" />
-      <mesh position={[0, 1.85, 8.18]}>
-        <planeGeometry args={[3, 0.9]} />
-        <meshStandardMaterial map={noren} side={THREE.DoubleSide} roughness={0.95} />
-      </mesh>
+      <ModelBoundary label="noren">
+        <Noren position={[0, 2.3, 8]} reduceMotion={reduceMotion} />
+      </ModelBoundary>
 
       {/* 나무 열쇠 신발장 두 줄 — 벽 안쪽 면(±5.875)에 등을 대고 안쪽을 본다 */}
       {[-1, 1].map((side) =>
