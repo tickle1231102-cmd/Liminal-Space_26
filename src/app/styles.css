@@ -44,6 +44,53 @@ body,
   border: 1px solid rgba(232, 228, 216, 0.12);
   pointer-events: none;
   z-index: 10;
+  animation: hud-prompt-in 0.18s ease-out;
+}
+
+/* 들고 있는 동안: 더 진하고 분명하게 */
+.hud-prompt--held {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-transform: none;
+  color: rgba(246, 240, 226, 0.95);
+  background: rgba(10, 12, 18, 0.6);
+  border-color: rgba(255, 214, 150, 0.45);
+  box-shadow: 0 0 18px rgba(255, 200, 120, 0.12);
+  bottom: 22%;
+}
+.hud-prompt__main {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+.hud-prompt--held strong {
+  font-weight: 600;
+  color: #ffd99a;
+}
+.hud-prompt__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffd99a;
+  animation: hud-dot 1.6s ease-in-out infinite;
+}
+.hud-prompt__sub {
+  font-size: 0.68rem;
+  opacity: 0.65;
+  letter-spacing: 0.06em;
+}
+@keyframes hud-prompt-in {
+  from { opacity: 0; transform: translate(-50%, 4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@keyframes hud-dot {
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-prompt, .hud-prompt__dot { animation: none; }
 }
 
 .hud-overlay {

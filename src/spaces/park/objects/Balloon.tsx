@@ -64,7 +64,7 @@ export function Balloon({
     interaction.register({
       id,
       kind: 'grab',
-      label: 'Balloon',
+      label: '풍선',
       body,
     })
     return () => interaction.unregister(id)
