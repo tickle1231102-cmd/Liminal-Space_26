@@ -1,6 +1,9 @@
 import { Suspense, useMemo } from 'react'
+import { getQuality } from '../../core/world/quality'
+import { ModelBoundary } from '../../core/world/ModelBoundary'
 import { GltfAsset, GltfInstances, GltfVisual, ModuleRun, spaceModel } from '../../core/world/GltfAsset'
 import { CuboidCollider, RigidBody } from '@react-three/rapier'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
 /**
@@ -19,6 +22,42 @@ export const PALETTE = {
   steel: '#7d8286',
 }
 
+/** art/blender/bathhouse/surfaces.py 의 재질 이름 (Surf_<name>) */
+export type Surface = 'Plaster' | 'Concrete' | 'CeilingWood' | 'Hinoki' | 'WoodDark' | 'TileWhite' | 'TileBlue'
+
+/**
+ * 공용 표면 재질을 박스 크기에 맞춰 타일링한 복제본. 텍스처 한 주기 = 1 m.
+ * 박스의 가장 큰 두 변을 U·V로 쓴다(벽은 길이×높이, 천장은 가로×세로) — 얇은 옆면은 늘어나도 보이지 않는다.
+ */
+function useSurface(surface: Surface, size: [number, number, number]) {
+  const { scene } = useGLTF(bathModel('surfaces'))
+  const [u, v] = [...size].sort((a, b) => b - a)
+  return useMemo(() => {
+    let src: THREE.MeshStandardMaterial | null = null
+    scene.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined
+      if (m && m.name === `Surf_${surface}`) src = m
+    })
+    if (!src) return null
+    const mat = (src as THREE.MeshStandardMaterial).clone()
+    for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap'] as const) {
+      const t = mat[key]
+      if (!t) continue
+      const c = t.clone()
+      c.wrapS = c.wrapT = THREE.RepeatWrapping
+      c.repeat.set(u!, v!)
+      c.needsUpdate = true
+      mat[key] = c
+    }
+    return mat
+  }, [scene, surface, u, v])
+}
+
+function SurfacedMesh({ surface, size }: { surface: Surface; size: [number, number, number] }) {
+  const material = useSurface(surface, size)
+  return material ? <primitive object={material} attach="material" /> : null
+}
+
 type BoxProps = {
   position: [number, number, number]
   size: [number, number, number]
@@ -33,6 +72,8 @@ type BoxProps = {
   rotation?: [number, number, number]
   /** false면 콜라이더만 두고 그리지 않는다 (Blender 모델이 겉모습을 맡을 때) */
   visible?: boolean
+  /** 공용 PBR 표면 재질 (로딩 중에는 color로 그린다) */
+  surface?: Surface
 }
 
 /** 고정 콜라이더를 가진 박스 한 덩어리. */
@@ -48,6 +89,7 @@ export function Box({
   solid = true,
   rotation,
   visible = true,
+  surface,
 }: BoxProps) {
   if (!visible) {
     return (
@@ -67,6 +109,11 @@ export function Box({
         emissive={emissive ?? '#000000'}
         emissiveIntensity={emissiveIntensity}
       />
+      {surface && (
+        <Suspense fallback={null}>
+          <SurfacedMesh surface={surface} size={size} />
+        </Suspense>
+      )}
     </mesh>
   )
   if (!solid) return mesh
@@ -84,12 +131,14 @@ export function Floor({
   top = 0,
   color = PALETTE.tileWhite,
   map,
+  surface,
 }: {
   x: [number, number]
   z: [number, number]
   top?: number
   color?: string
   map?: THREE.Texture
+  surface?: Surface
 }) {
   const w = x[1] - x[0]
   const d = z[1] - z[0]
@@ -100,6 +149,7 @@ export function Floor({
       color={color}
       map={map}
       roughness={0.35}
+      surface={surface}
     />
   )
 }
@@ -110,16 +160,24 @@ export function Ceiling({
   z,
   height,
   color = PALETTE.plaster,
+  surface,
 }: {
   x: [number, number]
   z: [number, number]
   height: number
   color?: string
+  surface?: Surface
 }) {
+  const size: [number, number, number] = [x[1] - x[0], 0.1, z[1] - z[0]]
   return (
     <mesh position={[(x[0] + x[1]) / 2, height + 0.05, (z[0] + z[1]) / 2]} receiveShadow>
-      <boxGeometry args={[x[1] - x[0], 0.1, z[1] - z[0]]} />
+      <boxGeometry args={size} />
       <meshStandardMaterial color={color} roughness={0.9} />
+      {surface && (
+        <Suspense fallback={null}>
+          <SurfacedMesh surface={surface} size={size} />
+        </Suspense>
+      )}
     </mesh>
   )
 }
@@ -140,6 +198,7 @@ export function Wall({
   thickness = 0.25,
   color = PALETTE.plaster,
   map,
+  surface,
 }: {
   axis: 'x' | 'z'
   at: number
@@ -150,6 +209,7 @@ export function Wall({
   thickness?: number
   color?: string
   map?: THREE.Texture
+  surface?: Surface
 }) {
   const pieces = useMemo(() => {
     const out: { a: number; b: number; y0: number; y1: number }[] = []
@@ -173,7 +233,7 @@ export function Wall({
           axis === 'x' ? [mid, y0 + h / 2, at] : [at, y0 + h / 2, mid]
         const size: [number, number, number] =
           axis === 'x' ? [len, h, thickness] : [thickness, h, len]
-        return <Box key={`${a}:${y0}`} position={pos} size={size} color={color} map={map} />
+        return <Box key={`${a}:${y0}`} position={pos} size={size} color={color} map={map} surface={surface} />
       })}
     </>
   )
@@ -196,9 +256,9 @@ export function WarmLamp({
 }) {
   return (
     <group position={position}>
-      <Suspense fallback={null}>
+      <ModelBoundary label="pendant_lamp">
         <GltfVisual url={bathModel('pendant_lamp')} />
-      </Suspense>
+      </ModelBoundary>
       <pointLight position={[0, -0.08, 0]} color={color} intensity={intensity} distance={distance} decay={1.6} />
     </group>
   )
@@ -233,7 +293,9 @@ function shade(hex: string, delta: number) {
   return `rgb(${ch(16)},${ch(8)},${ch(0)})`
 }
 
-export const bathModel = (name: string) => spaceModel('bathhouse', name)
+/** 저사양 프리셋이면 512px 텍스처 변형(<name>.mobile.glb — scripts/build-assets.mjs)을 쓴다 */
+export const bathModel = (name: string) =>
+  spaceModel('bathhouse', getQuality() === 'low' ? `${name}.mobile` : name)
 
 /** art/blender/bathhouse/tile_wall_module.py — 2 m 모듈, 높이 6 m, 두께 0.25 m (원래 크기로 배치). */
 const TILE_WALL = { url: bathModel('tile_wall_module'), length: 2, height: 6, thickness: 0.25 }
@@ -266,7 +328,7 @@ export function TileWall({
   const h = TILE_WALL.height
   return (
     <>
-      <Suspense fallback={null}>
+      <ModelBoundary label="tile_wall_module">
         {runs.map(([a, b]) => (
           <ModuleRun
             key={`${a}:${b}`}
@@ -279,7 +341,7 @@ export function TileWall({
             fit={{ height: h, thickness: TILE_WALL.thickness }}
           />
         ))}
-      </Suspense>
+      </ModelBoundary>
       {gaps.map(([g0, g1]) => {
         const mid = (g0 + g1) / 2
         const lh = h - DOOR_H
@@ -290,6 +352,7 @@ export function TileWall({
             size={axis === 'x' ? [g1 - g0, lh, TILE_WALL.thickness] : [TILE_WALL.thickness, lh, g1 - g0]}
             color="#c9cdc8"
             roughness={0.3}
+            surface="TileWhite"
           />
         )
       })}
@@ -308,9 +371,9 @@ export function Model({
   rotationY?: number
 }) {
   return (
-    <Suspense fallback={null}>
+    <ModelBoundary label={name}>
       <GltfAsset url={bathModel(name)} position={position} rotationY={rotationY} />
-    </Suspense>
+    </ModelBoundary>
   )
 }
 
@@ -341,9 +404,9 @@ export function ModuleFloor({
         size={[x[1] - x[0], 0.2, z[1] - z[0]]}
         visible={false}
       />
-      <Suspense fallback={null}>
+      <ModelBoundary label={module}>
         <GltfInstances url={bathModel(module)} items={items} />
-      </Suspense>
+      </ModelBoundary>
     </>
   )
 }

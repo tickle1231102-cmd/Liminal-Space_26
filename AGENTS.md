@@ -76,6 +76,10 @@
   3. `src/spaces/registry.ts`의 `SPACES`에 한 줄 추가 (첫 항목이 기본 공간)
   4. 모델은 `art/blender/<id>/*.py` → `npm run assets:build`, 출처는 `public/assets/ATTRIBUTION.md`
   5. 이 절의 구조 목록과 PRD에 공간 설명을 추가
+- **품질 프리셋**: 공간 월드는 `quality: 'high' | 'low'`(SpaceWorldProps)를 받는다. 'low'(모바일)는 입자·후처리를 줄인다. 모델 URL처럼 트리 밖에서 필요하면 `core/world/quality`의 `getQuality()`를 쓴다.
+- **모바일 모델 변형**: `scripts/build-assets.mjs`의 `MOBILE_VARIANT_SPACES`에 든 공간은 모델마다 512px 텍스처의 `<name>.mobile.glb`가 함께 생성된다. 새 공간도 고품질 텍스처를 쓰면 여기에 추가한다.
+- **모델 로드 실패 격리**: 공간 모델은 `core/world/ModelBoundary`로 감싼다 — 파일 하나가 없어도 그 오브젝트만 빠지고 공간은 계속 돈다.
+- **고품질 Blender 파이프라인**: `art/blender/lib/quality.py`(타일·나무·회벽 텍스처 생성, PBR 재질, 베벨, WebP 내보내기)는 선택 사용이다. 기존 공간 스크립트는 쓰지 않는다.
 - 공간별 작업은 `space/<id>-<작업>` 형태의 브랜치에서 하고 `main`으로 병합한다.
 
 ## Claude Code / Cursor 역할 분담

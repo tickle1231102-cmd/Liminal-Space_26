@@ -266,9 +266,49 @@ def finish(objs, period=1.0, bevel_width=0.006, uv=True, name="Model"):
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
         if uv and not o.get("keep_uv"):
             box_uv(o, period)
-        if bevel_width:
+        # 25 cm 미만 소품 부품(열쇠패·병·손잡이)은 베벨이 보이지 않고 정점만 늘린다
+        if bevel_width and max(o.dimensions) >= 0.25:
             bevel(o, width=bevel_width, segments=2)
             for m in list(o.modifiers):
                 bpy.ops.object.modifier_apply(modifier=m.name)
     from common import join_visual
     return join_visual(name, [o for o in objs if o.type == "MESH" and not o.name.startswith("COL_")])
+
+
+def plaster_textures(name, size=1024, period=1.0, color=(0.78, 0.75, 0.68), grain=1.0,
+                     rough=0.85, seed=19, pits=0.0):
+    """Seamless troweled plaster / concrete: low-frequency mottling + fine grain in the normal.
+    pits > 0 adds small dark pores (concrete)."""
+    rng = np.random.RandomState(seed)
+    px = period / size
+    u = (np.arange(size) + 0.5) * px
+    X, Y = np.meshgrid(u, u)
+    low = _periodic_noise(X, Y, period, 5, rng, 1.0)
+    # fine grain: hashed white noise blurred by a wrap-around box filter (seamless)
+    w = rng.uniform(-1, 1, (size, size))
+    for _ in range(2):
+        w = (w + np.roll(w, 1, 0) + np.roll(w, -1, 0) + np.roll(w, 1, 1) + np.roll(w, -1, 1)) / 5
+    fine = w / (np.abs(w).max() + 1e-6)
+    shade = 1 + 0.05 * low + 0.03 * fine * grain
+    if pits:
+        pore = (rng.uniform(0, 1, (size, size)) < pits * 0.004)
+        for _ in range(1):
+            pore = pore | np.roll(pore, 1, 0) | np.roll(pore, 1, 1)
+        shade = np.where(pore, shade * 0.6, shade)
+    rgb = np.clip(np.array(color) * shade[..., None], 0, 1)
+    hz = 0.0003 * fine * grain + 0.0004 * low
+    gx = (np.roll(hz, -1, 1) - np.roll(hz, 1, 1)) / (2 * px)
+    gy = (np.roll(hz, -1, 0) - np.roll(hz, 1, 0)) / (2 * px)
+    n = np.dstack([-gx, -gy, np.ones_like(gx)])
+    n /= np.linalg.norm(n, axis=2, keepdims=True)
+    r = np.clip(rough + 0.06 * low, 0, 1)
+
+    def rgba(c):
+        c = c if c.ndim == 3 else np.dstack([c, c, c])
+        return np.dstack([c, np.ones(c.shape[:2])])
+
+    return {
+        "color": _image(f"{name}_Color", rgba(rgb)),
+        "normal": _image(f"{name}_Normal", rgba(n * 0.5 + 0.5), srgb=False),
+        "rough": _image(f"{name}_Rough", rgba(r), srgb=False),
+    }

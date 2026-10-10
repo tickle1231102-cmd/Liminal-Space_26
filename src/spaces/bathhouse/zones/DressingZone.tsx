@@ -10,10 +10,10 @@ export function DressingZone() {
   return (
     <group name="bathhouse-dressing">
       <ModuleFloor x={[-10, 10]} z={[-10, 8]} module="floor_wood_module" />
-      <Ceiling x={[-10, 10]} z={[-10, 8]} height={H} />
+      <Ceiling x={[-10, 10]} z={[-10, 8]} height={H} surface="CeilingWood" />
 
-      <Wall axis="z" at={-10} from={-10} to={8} height={H} />
-      <Wall axis="z" at={10} from={-10} to={8} height={H} />
+      <Wall axis="z" at={-10} from={-10} to={8} height={H} surface="Plaster" />
+      <Wall axis="z" at={10} from={-10} to={8} height={H} surface="Plaster" />
 
       {/* 반다이 — 입구를 내려다보는 높은 접수대 (입구 쪽 -X를 본다) */}
       <Model name="bandai" position={[3.2, 0, 6.4]} rotationY={-Math.PI / 2} />

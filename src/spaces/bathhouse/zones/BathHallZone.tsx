@@ -28,7 +28,7 @@ export function BathHallZone({ reduceMotion, quality }: Pick<SpaceWorldProps, 'r
       <ModuleFloor x={[-14, 14]} z={[-36, -34]} module="floor_tile_module" />
       <ModuleFloor x={[-14, TUB.x[0]]} z={TUB.z} module="floor_tile_module" />
       <ModuleFloor x={[TUB.x[1], 14]} z={TUB.z} module="floor_tile_module" />
-      <Ceiling x={[-14, 14]} z={[-36, -10]} height={H} color="#cfd6d4" />
+      <Ceiling x={[-14, 14]} z={[-36, -10]} height={H} color="#cfd6d4" surface="Plaster" />
 
       {/* 대욕조 — 겉모습은 art/blender/bathhouse/tub.py, 충돌은 여기서 (바닥·안쪽 벽·경사로) */}
       <Model name="tub" position={tubCenter} />

@@ -5,7 +5,8 @@
 import { spawnSync } from 'node:child_process'
 import { Logger, NodeIO } from '@gltf-transform/core'
 import { ALL_EXTENSIONS } from '@gltf-transform/extensions'
-import { dedup, meshopt, prune, resample, weld } from '@gltf-transform/functions'
+import { dedup, meshopt, prune, resample, textureCompress, weld } from '@gltf-transform/functions'
+import sharp from 'sharp'
 import { MeshoptDecoder, MeshoptEncoder } from 'meshoptimizer'
 import { existsSync, mkdirSync, readdirSync, statSync, watch } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -26,7 +27,8 @@ function findBlender() {
 function scripts() {
   return readdirSync(srcDir)
     .filter((d) => d !== 'lib' && statSync(join(srcDir, d)).isDirectory())
-    .flatMap((d) => readdirSync(join(srcDir, d)).filter((f) => f.endsWith('.py')).map((f) => join(srcDir, d, f)))
+    // Finder 복사본("x 2.py")은 빌드하지 않는다
+    .flatMap((d) => readdirSync(join(srcDir, d)).filter((f) => f.endsWith('.py') && !/ \d+\.py$/.test(f)).map((f) => join(srcDir, d, f)))
 }
 
 const io = new NodeIO()
@@ -45,6 +47,18 @@ async function compress(file) {
   await io.write(file, doc)
 }
 
+/** 모바일 프리셋용 저해상도 변형(<name>.mobile.glb)을 만드는 공간 — 런타임 core/world/quality가 고른다 */
+const MOBILE_VARIANT_SPACES = ['bathhouse']
+const MOBILE_TEXTURE = 512
+
+async function mobileVariant(file) {
+  const doc = await io.read(file)
+  await doc.transform(textureCompress({ encoder: sharp, targetFormat: 'webp', resize: [MOBILE_TEXTURE, MOBILE_TEXTURE], quality: 80 }))
+  const out = file.replace(/\.glb$/, '.mobile.glb')
+  await io.write(out, doc)
+  return out
+}
+
 async function build(script) {
   const rel = relative(srcDir, script).replace(/\.py$/, '')
   const out = join(outDir, `${rel}.glb`)
@@ -57,7 +71,12 @@ async function build(script) {
   }
   const raw = statSync(out).size
   await compress(out)
-  console.log(`✓ ${rel}.glb ${(raw / 1024).toFixed(0)}→${(statSync(out).size / 1024).toFixed(0)} KB (${Date.now() - t}ms)`)
+  let mobile = ''
+  if (MOBILE_VARIANT_SPACES.includes(rel.split('/')[0])) {
+    const m = await mobileVariant(out)
+    mobile = `, mobile ${(statSync(m).size / 1024).toFixed(0)} KB`
+  }
+  console.log(`✓ ${rel}.glb ${(raw / 1024).toFixed(0)}→${(statSync(out).size / 1024).toFixed(0)} KB${mobile} (${Date.now() - t}ms)`)
   return true
 }
 

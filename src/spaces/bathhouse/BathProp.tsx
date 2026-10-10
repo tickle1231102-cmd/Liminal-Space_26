@@ -1,4 +1,5 @@
-import { Suspense, useRef } from 'react'
+import { useRef } from 'react'
+import { ModelBoundary } from '../../core/world/ModelBoundary'
 import { CuboidCollider, RigidBody, type RapierRigidBody } from '@react-three/rapier'
 import { GltfVisual } from '../../core/world/GltfAsset'
 import { useBuoyancy } from '../../core/physics/useBuoyancy'
@@ -51,9 +52,9 @@ export function BathProp({
       ccd
     >
       <CuboidCollider args={s.half} friction={0.7} restitution={0.05} />
-      <Suspense fallback={null}>
+      <ModelBoundary label={MODEL[kind]}>
         <GltfVisual url={bathModel(MODEL[kind])} />
-      </Suspense>
+      </ModelBoundary>
     </RigidBody>
   )
 }

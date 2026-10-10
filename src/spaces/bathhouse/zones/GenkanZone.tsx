@@ -35,16 +35,16 @@ export function GenkanZone() {
   return (
     <group name="bathhouse-genkan">
       <ModuleFloor x={[-6, 6]} z={[8, 20]} module="floor_stone_module" />
-      <Ceiling x={[-6, 6]} z={[8, 20]} height={H} color={PALETTE.wood} />
+      <Ceiling x={[-6, 6]} z={[8, 20]} height={H} color={PALETTE.wood} surface="CeilingWood" />
 
-      <Wall axis="z" at={-6} from={8} to={20} height={H} />
-      <Wall axis="z" at={6} from={8} to={20} height={H} />
+      <Wall axis="z" at={-6} from={8} to={20} height={H} surface="Plaster" />
+      <Wall axis="z" at={6} from={8} to={20} height={H} surface="Plaster" />
       {/* 바깥 유리 미닫이 — 너머는 어둡다 */}
-      <Wall axis="x" at={20} from={-6} to={6} height={H} color={PALETTE.woodDark} />
+      <Wall axis="x" at={20} from={-6} to={6} height={H} color={PALETTE.woodDark} surface="WoodDark" />
       <Box position={[0, 1.3, 19.8]} size={[4, 2.2, 0.06]} color="#0d1114" roughness={0.1} solid={false} />
 
       {/* 탈의실 쪽 벽과 노렌 */}
-      <Wall axis="x" at={8} from={-10} to={10} height={3.2} gaps={[[-1.5, 1.5]]} />
+      <Wall axis="x" at={8} from={-10} to={10} height={3.2} gaps={[[-1.5, 1.5]]} surface="Plaster" />
       <mesh position={[0, 1.85, 8.18]}>
         <planeGeometry args={[3, 0.9]} />
         <meshStandardMaterial map={noren} side={THREE.DoubleSide} roughness={0.95} />
@@ -63,7 +63,7 @@ export function GenkanZone() {
       )}
 
       {/* 신발 벗는 단 */}
-      <Box position={[0, 0.08, 9.2]} size={[3.4, 0.16, 1.4]} color={PALETTE.woodDark} solid={false} />
+      <Box position={[0, 0.08, 9.2]} size={[3.4, 0.16, 1.4]} color={PALETTE.woodDark} solid={false} surface="WoodDark" />
 
       <WarmLamp position={[0, H - 0.3, 17]} intensity={4} />
       <WarmLamp position={[0, H - 0.3, 11]} intensity={4} />

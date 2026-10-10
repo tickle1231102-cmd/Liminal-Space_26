@@ -10,11 +10,13 @@ import type { SpaceDefinition, SpaceWorldProps } from '../spaces/types'
 import type { ComfortSettings } from './comfort'
 import { PerfSampler } from './PerfHud'
 import { Crosshair } from './Hud'
+import { setQuality } from '../core/world/quality'
 import { detectPlatform, isTouchPrimary } from './platform'
 
 /** 모바일(Capacitor·터치 기기)은 저사양 프리셋 */
 const QUALITY: SpaceWorldProps['quality'] =
   detectPlatform() === 'capacitor' || isTouchPrimary() ? 'low' : 'high'
+setQuality(QUALITY)
 
 type GameSceneProps = {
   comfort: ComfortSettings
