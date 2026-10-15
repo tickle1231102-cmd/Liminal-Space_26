@@ -239,6 +239,9 @@ export function Wall({
   )
 }
 
+/** 여탕 쪽 백열등 — 같은 전구인데 아주 조금 더 분홍빛 (PRD 13절 여탕 날개) */
+export const LAMP_WOMEN = '#ffc9a6'
+
 /**
  * 법랑 갓 펜던트 등 (art/blender/bathhouse/pendant_lamp.py) + 그림자 없는 포인트 라이트.
  * position = 전구 위치.

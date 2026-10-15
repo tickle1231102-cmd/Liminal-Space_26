@@ -24,7 +24,8 @@ const SEATS = SHOWER_Z.flatMap((z) => [z - 0.65, z + 0.65])
  * 재시드로 흔들리는 건 소품 배치와 물방울 위치뿐(PRD 04·13절).
  */
 const ZONES: Record<BathZoneName, { area: Rect; avoid: Rect[]; kinds: BathPropKind[]; count: [number, number] }> = {
-  genkan: { area: { x: [-4.5, 4.5], z: [10, 18.5] }, avoid: [], kinds: ['basket'], count: [0, 1] },
+  // 북서쪽 모서리의 신발 벗는 단(두 노렌 앞)에는 뿌리지 않는다
+  genkan: { area: { x: [-4.5, 4.5], z: [10, 18.5] }, avoid: [{ x: [-6, -2.2], z: [8, 11.9] }], kinds: ['basket'], count: [0, 1] },
   dressing: {
     area: { x: [-8.4, 8.4], z: [-8.5, 5] },
     avoid: [{ x: [-3.5, -1.7], z: [-3.3, 1.3] }, { x: [1.7, 3.5], z: [-3.3, 1.3] }],

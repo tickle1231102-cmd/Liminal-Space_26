@@ -7,13 +7,14 @@ import { GenkanZone } from './zones/GenkanZone'
 import { DressingZone } from './zones/DressingZone'
 import { BathHallZone } from './zones/BathHallZone'
 import { BoilerZone } from './zones/BoilerZone'
+import { WomenDressingZone } from './zones/WomenDressingZone'
 import { BathProps } from './BathProps'
 import { BathFragments } from './BathFragments'
 import { BathAudio } from './BathAudio'
 
 /**
  * 심야 센토 — PRD 13절. 겐칸 → 반다이·탈의실 → 욕실 → 보일러실·사우나.
- * 0단계 화이트박스: 동선·스케일·콜라이더만 확정한다.
+ * 여탕 날개(x<-10)는 겐칸 서쪽 붉은 노렌으로 들어가는 거울상 구역이며 보일러실은 공용.
  */
 export default function BathhouseWorld({ reduceMotion, audioEnabled, quality }: SpaceWorldProps) {
   return (
@@ -22,6 +23,11 @@ export default function BathhouseWorld({ reduceMotion, audioEnabled, quality }: 
       <GenkanZone />
       <DressingZone />
       <BathHallZone reduceMotion={reduceMotion} quality={quality} />
+      <WomenDressingZone />
+      {/* 여탕 욕실 — 콜라이더는 항상 살아 있고 렌더만 거리로 끈다 */}
+      <DistanceLod center={[-28, 0, -23]} near={40}>
+        <BathHallZone reduceMotion={reduceMotion} quality={quality} side="women" />
+      </DistanceLod>
       <BathProps zone="genkan" />
       <BathProps zone="dressing" />
       <BathProps zone="hall" />
