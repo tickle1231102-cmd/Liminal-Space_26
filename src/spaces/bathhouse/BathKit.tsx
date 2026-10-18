@@ -388,6 +388,18 @@ export function Model({
 }
 
 /**
+ * 같은 모델 여러 개 — 인스턴싱으로 재질당 드로우콜 하나. 각 사본은 모델의 COL_* 콜라이더를 가진다.
+ * 락커·샤워 칸·화장대처럼 줄지어 반복되는 모델에 쓴다 (Model을 여러 번 쓰면 사본마다 재질 수만큼 그린다).
+ */
+export function ModelRow({ name, items }: { name: string; items: { position: [number, number, number]; rotationY?: number }[] }) {
+  return (
+    <ModelBoundary label={name}>
+      <GltfInstances url={bathModel(name)} items={items} solid />
+    </ModelBoundary>
+  )
+}
+
+/**
  * 1 m 바닥 모듈(art/blender/bathhouse/floor_*_module.py)을 격자로 깐 바닥. 충돌은 한 장짜리 박스.
  * 범위는 정수 m여야 줄눈이 맞는다.
  */

@@ -1,4 +1,5 @@
-import { Box, Ceiling, LAMP_WOMEN, Model, ModuleFloor, PARTITION_TOP, TileWall, WarmLamp } from '../BathKit'
+import { useMemo } from 'react'
+import { Box, Ceiling, LAMP_WOMEN, Model, ModelRow, ModuleFloor, PARTITION_TOP, TileWall, WarmLamp } from '../BathKit'
 import { Water } from '../Water'
 import { SHOWER_Z } from '../createBathDecor'
 import { Steam } from '../Steam'
@@ -39,6 +40,15 @@ export function BathHallZone({
   const HOT = { ...HOT_M, x: mirrorRange(side, HOT_M.x) }
   const id = (k: string) => (women ? `women-${k}` : k)
   const lampColor = women ? LAMP_WOMEN : undefined
+  const showers = useMemo(
+    () => [
+      ...SHOWER_Z.map((z) => ({ position: [mx(-13.875), 0, z] as [number, number, number], rotationY: rot(Math.PI / 2) })),
+      ...[-20.6, -18, -15.4].flatMap((z) =>
+        [Math.PI / 2, -Math.PI / 2].map((r) => ({ position: [mx(7), 0, z] as [number, number, number], rotationY: r })),
+      ),
+    ],
+    [side], // mx·rot는 side로만 정해진다
+  )
   const tubCenter: [number, number, number] = [(TUB.x[0] + TUB.x[1]) / 2, 0, (TUB.z[0] + TUB.z[1]) / 2]
   const hotCenter: [number, number, number] = [(HOT.x[0] + HOT.x[1]) / 2, 0, (HOT.z[0] + HOT.z[1]) / 2]
 
@@ -90,15 +100,7 @@ export function BathHallZone({
       <Steam x={[HOT.x[0] + 0.3, HOT.x[1] - 0.3]} z={[HOT.z[0] + 0.3, HOT.z[1] - 0.3]} y={HOT.rim - 0.08} count={Math.round(60 * steam)} opacity={0.08} reduceMotion={reduceMotion} />
 
       {/* 좌식 샤워 — 서쪽 벽면(모델 뒷면이 벽 안쪽 면에 붙는다)과 가운데 등 맞댄 섬 */}
-      {SHOWER_Z.map((z) => (
-        <Model key={`w${z}`} name="shower_unit" position={[mx(-13.875), 0, z]} rotationY={rot(Math.PI / 2)} />
-      ))}
-      {[-20.6, -18, -15.4].map((z) => (
-        <group key={`i${z}`}>
-          <Model name="shower_unit" position={[mx(7), 0, z]} rotationY={Math.PI / 2} />
-          <Model name="shower_unit" position={[mx(7), 0, z]} rotationY={-Math.PI / 2} />
-        </group>
-      ))}
+      <ModelRow name="shower_unit" items={showers} />
 
       {women ? (
         <>

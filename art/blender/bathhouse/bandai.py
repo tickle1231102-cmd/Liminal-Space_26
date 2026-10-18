@@ -67,10 +67,11 @@ for k in range(9):
     x = AX - 0.18 + k * 0.045
     o.append(tcyl(f"Rod{k}", 0.004, 0.11, (x, 1.245, AZ), br, axis="z", verts=8))
     up = k in (3, 6)                            # heaven bead lowered onto the beam
-    o.append(tcyl(f"Heaven{k}", 0.009, 0.01, (x, 1.245, AZ + (0.033 if up else 0.048)), bead, axis="z", verts=8))
+    # beads are 1.6 cm boxes, not cylinders: at this size the silhouette is the same for a tenth of the triangles
+    o.append(tbox(f"Heaven{k}", (0.016, 0.016, 0.01), (x, 1.245, AZ + (0.033 if up else 0.048)), bead))
     for j in range(4):
         z = AZ + 0.011 - 0.0105 * j if j < counted[k] else AZ - 0.048 + 0.0105 * (3 - j)
-        o.append(tcyl(f"Earth{k}{j}", 0.009, 0.01, (x, 1.245, z), bead, axis="z", verts=8))
+        o.append(tbox(f"Earth{k}{j}", (0.016, 0.016, 0.01), (x, 1.245, z), bead))
 # brass desk bell (women's side): base disc, dome, plunger
 BX, BZ = 0.45, 0.02
 o.append(tcyl("BellBase", 0.04, 0.012, (BX, 1.216, BZ), enamel((0.1, 0.08, 0.07), "BellBase"), verts=20))

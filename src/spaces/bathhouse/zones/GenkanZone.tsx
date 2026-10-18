@@ -1,8 +1,14 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
-import { Box, Ceiling, Model, ModuleFloor, PALETTE, Wall, WarmLamp } from '../BathKit'
+import { Box, Ceiling, ModelRow, ModuleFloor, PALETTE, Wall, WarmLamp } from '../BathKit'
 
 const H = 3
+const SHOE_LOCKERS = [-1, 1].flatMap((side) =>
+  (side < 0 ? [14, 17.5] : [10.5, 14, 17.5]).map((z) => ({
+    position: [side * 5.475, 0, z] as [number, number, number],
+    rotationY: side < 0 ? Math.PI / 2 : -Math.PI / 2,
+  })),
+)
 
 /** 노렌 — 남탕은 남색 바탕에 '男', 여탕은 붉은 바탕에 '女'. */
 function norenTexture(bg: string, char: string, slit: string) {
@@ -58,16 +64,7 @@ export function GenkanZone() {
       </mesh>
 
       {/* 나무 열쇠 신발장 두 줄 — 벽 안쪽 면(±5.875)에 등을 대고 안쪽을 본다. 서쪽 첫 칸은 여탕 통로 자리 */}
-      {[-1, 1].map((side) =>
-        (side < 0 ? [14, 17.5] : [10.5, 14, 17.5]).map((z) => (
-          <Model
-            key={`${side}:${z}`}
-            name="shoe_locker"
-            position={[side * 5.475, 0, z]}
-            rotationY={side < 0 ? Math.PI / 2 : -Math.PI / 2}
-          />
-        )),
-      )}
+      <ModelRow name="shoe_locker" items={SHOE_LOCKERS} />
 
       {/* 신발 벗는 단 — 두 노렌 앞 모서리를 한 장으로 덮는다 */}
       <Box position={[-4.1375, 0.08, 9.8625]} size={[3.475, 0.16, 3.475]} color={PALETTE.woodDark} solid={false} surface="WoodDark" />

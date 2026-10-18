@@ -1,11 +1,19 @@
-import { Ceiling, LAMP_WOMEN, Model, ModuleFloor, PALETTE, TileWall, Wall, WarmLamp } from '../BathKit'
+import { Ceiling, LAMP_WOMEN, Model, ModelRow, ModuleFloor, PALETTE, TileWall, Wall, WarmLamp } from '../BathKit'
 
 const H = 3.2
 /** 화장대 한 칸 폭 (art/blender/bathhouse/vanity_mirror.py 2.4 x 0.5 m) — 칸을 이어 붙이면 줄눈이 맞는다 */
 const VANITY_W = 2.4
-const VANITY_X = [-27, -27 + VANITY_W, -27 + VANITY_W * 2]
+const VANITIES = [-27, -27 + VANITY_W, -27 + VANITY_W * 2].map((x) => ({
+  position: [x, 0, 11.625] as [number, number, number],
+  rotationY: Math.PI,
+}))
 /** 헬멧형 드라이어 의자(hood_dryer.py) — 뒷면 z=-0.40이 서쪽 벽 안쪽 면(-29.875)에 닿는다 */
-const DRYER_Z = [5.6, 6.6, 7.6]
+const DRYERS = [5.6, 6.6, 7.6].map((z) => ({ position: [-29.475, 0, z] as [number, number, number], rotationY: Math.PI / 2 }))
+const LOCKERS = [-6, -2, 2].flatMap((z) => [
+  { position: [-29.525, 0, z] as [number, number, number], rotationY: Math.PI / 2 },
+  { position: [-10.475, 0, z] as [number, number, number], rotationY: -Math.PI / 2 },
+])
+const BENCHES = [-22.6, -17.4].map((x) => ({ position: [x, 0, -1] as [number, number, number], rotationY: Math.PI / 2 }))
 
 /**
  * 여탕 탈의실 — 남탕 탈의실과 x=-10 칸막이벽을 공유하는 거울상 날개.
@@ -28,25 +36,14 @@ export function WomenDressingZone() {
       <Wall axis="x" at={12} from={-30} to={-6} height={H} surface="Plaster" />
 
       {/* 나무 락커 — 서쪽 벽과 칸막이벽 뒷면에 등을 댄다 */}
-      {[-6, -2, 2].map((z) => (
-        <group key={z}>
-          <Model name="locker_bank" position={[-29.525, 0, z]} rotationY={Math.PI / 2} />
-          <Model name="locker_bank" position={[-10.475, 0, z]} rotationY={-Math.PI / 2} />
-        </group>
-      ))}
-
-      <Model name="bench" position={[-22.6, 0, -1]} rotationY={Math.PI / 2} />
-      <Model name="bench" position={[-17.4, 0, -1]} rotationY={Math.PI / 2} />
+      <ModelRow name="locker_bank" items={LOCKERS} />
+      <ModelRow name="bench" items={BENCHES} />
 
       {/* 화장대 줄 — 북쪽 벽 안쪽 면(11.875)에 등을 대고 방 안(-z)을 본다 */}
-      {VANITY_X.map((x) => (
-        <Model key={x} name="vanity_mirror" position={[x, 0, 11.625]} rotationY={Math.PI} />
-      ))}
+      <ModelRow name="vanity_mirror" items={VANITIES} />
 
       {/* 헬멧형 드라이어 의자 — 서쪽 벽에 등을 대고 방 안(+x)을 본다 */}
-      {DRYER_Z.map((z) => (
-        <Model key={z} name="hood_dryer" position={[-29.475, 0, z]} rotationY={Math.PI / 2} />
-      ))}
+      <ModelRow name="hood_dryer" items={DRYERS} />
 
       {/* 유아용 베드 — 칸막이 뒷면, 락커와 반다이 사이. 긴 변이 벽을 따라간다 */}
       <Model name="baby_bed" position={[-10.45, 0, 5]} rotationY={-Math.PI / 2} />
