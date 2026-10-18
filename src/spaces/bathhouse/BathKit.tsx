@@ -301,7 +301,10 @@ export const bathModel = (name: string) =>
   spaceModel('bathhouse', getQuality() === 'low' ? `${name}.mobile` : name)
 
 /** art/blender/bathhouse/tile_wall_module.py — 2 m 모듈, 높이 6 m, 두께 0.25 m (원래 크기로 배치). */
-const TILE_WALL = { url: bathModel('tile_wall_module'), length: 2, height: 6, thickness: 0.25 }
+const TILE_WALL_FULL = { url: bathModel('tile_wall_module'), length: 2, height: 6, thickness: 0.25 }
+/** art/blender/bathhouse/tile_partition_module.py — 남탕·여탕 칸막이. 천장(6 m)보다 1.8 m 낮다 */
+const TILE_PARTITION = { url: bathModel('tile_partition_module'), length: 2, height: 4.2, thickness: 0.25 }
+export const PARTITION_TOP = TILE_PARTITION.height
 
 /**
  * 욕실 타일 벽. 구간 길이는 2 m 배수로 잡아야 타일 줄눈이 모듈 사이에서 이어진다.
@@ -313,13 +316,17 @@ export function TileWall({
   from,
   to,
   gaps = [],
+  partition = false,
 }: {
   axis: 'x' | 'z'
   at: number
   from: number
   to: number
   gaps?: [number, number][]
+  /** 천장까지 닿지 않는 칸막이 모듈 — 위로 김·빛·소리가 넘어간다 */
+  partition?: boolean
 }) {
+  const TILE_WALL = partition ? TILE_PARTITION : TILE_WALL_FULL
   const runs: [number, number][] = []
   let cursor = from
   for (const [g0, g1] of [...gaps].sort((p, q) => p[0] - q[0])) {
@@ -331,7 +338,7 @@ export function TileWall({
   const h = TILE_WALL.height
   return (
     <>
-      <ModelBoundary label="tile_wall_module">
+      <ModelBoundary label={partition ? 'tile_partition_module' : 'tile_wall_module'}>
         {runs.map(([a, b]) => (
           <ModuleRun
             key={`${a}:${b}`}

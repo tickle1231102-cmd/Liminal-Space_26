@@ -1,4 +1,4 @@
-import { Box, Ceiling, LAMP_WOMEN, Model, ModuleFloor, TileWall, WarmLamp } from '../BathKit'
+import { Box, Ceiling, LAMP_WOMEN, Model, ModuleFloor, PARTITION_TOP, TileWall, WarmLamp } from '../BathKit'
 import { Water } from '../Water'
 import { SHOWER_Z } from '../createBathDecor'
 import { Steam } from '../Steam'
@@ -103,15 +103,18 @@ export function BathHallZone({
       {women ? (
         <>
           {/* 여탕 벽: 서쪽 외벽, 북쪽(벽화). 동쪽은 남탕 서쪽 벽(칸막이)을 공유 */}
-          <TileWall axis="z" at={mx(14)} from={-36} to={-10} />
+          {/* 서쪽 벽 — 보일러실로 가는 배관 복도 문(z -34~-32) */}
+          <TileWall axis="z" at={mx(14)} from={-36} to={-10} gaps={[[-34, -32]]} />
           <TileWall axis="x" at={-36} from={HALL[0]} to={HALL[1]} />
           {/* 후지산 대신 새벽 바다와 섬 — art/blender/bathhouse/mural_sea.py */}
           <Model name="mural_sea" position={[mx(0), 3.6, -35.86]} />
         </>
       ) : (
         <>
-          {/* 벽: 서쪽(여탕과의 칸막이), 동쪽(보일러실 문), 북쪽(벽화) */}
-          <TileWall axis="z" at={-14} from={-36} to={-10} />
+          {/* 벽: 서쪽(여탕과의 칸막이 — 천장 1.8 m 아래에서 끊긴다), 동쪽(보일러실 문), 북쪽(벽화) */}
+          <TileWall axis="z" at={MIRROR_X} from={-36} to={-10} partition />
+          {/* 양쪽 탕의 김이 칸막이 위로 넘실댄다 */}
+          <Steam x={[MIRROR_X - 1.2, MIRROR_X + 1.2]} z={[-34, -12]} y={PARTITION_TOP - 0.9} count={Math.round(70 * steam)} opacity={0.05} reduceMotion={reduceMotion} />
           <TileWall axis="z" at={14} from={-36} to={-10} gaps={[[-30, -28]]} />
           <TileWall axis="x" at={-36} from={-14} to={14} />
           <Model name="mural" position={[0, 3.6, -35.86]} />

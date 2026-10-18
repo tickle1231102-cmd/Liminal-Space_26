@@ -35,6 +35,11 @@ export function BathAudio({ enabled }: { enabled: boolean }) {
     stops.push(noiseLoop(src([-3, 0, -27], 22, 0.05), 'white', { type: 'bandpass', freq: 900, q: 0.6 }, 0.11))
     // 열탕 토수구
     stops.push(noiseLoop(src([9.7, 1.4, -33.6], 12, 0.05), 'white', { type: 'bandpass', freq: 1600, q: 1.2 }))
+    // 여탕 욕실 — 같은 물소리가 칸막이 위로 넘어온다. 열탕 모델은 반전하지 않으므로 토수구는 중심 +1.2
+    stops.push(noiseLoop(src([-25, 0, -27], 22, 0.04), 'white', { type: 'bandpass', freq: 900, q: 0.6 }, 0.11))
+    stops.push(noiseLoop(src([-35.3, 1.4, -33.6], 12, 0.04), 'white', { type: 'bandpass', freq: 1600, q: 1.2 }))
+    // 배관 복도 — 관을 타고 흐르는 물의 낮은 쉬익
+    stops.push(noiseLoop(src([-13.5, 2.2, -38.4], 26, 0.03), 'brown', { type: 'lowpass', freq: 500 }, 0.04))
     // 탈의실 천장 환풍기 — 저역 브라운 노이즈 + 120Hz 부근 공명
     stops.push(noiseLoop(src([0, 3, -1], 16, 0.06), 'brown', { type: 'lowpass', freq: 260 }, 0.05))
     // 보일러실 — 아주 낮은 웅웅거림, 벽 너머로 희미하게 들린다
