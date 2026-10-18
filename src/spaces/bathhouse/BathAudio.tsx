@@ -5,11 +5,63 @@ import { audioContext, drip, noiseLoop, SpatialSource } from '../../core/audio/s
 import { useBathDrips } from './BathProps'
 import { SHOWER_Z } from './createBathDecor'
 
-/** 탈의실 라디오 위치 (반다이 위) */
-const RADIO = new THREE.Vector3(3.2, 1.5, 6.4)
+/** 라디오 두 대 — 남탕은 반다이 남탕 쪽, 여탕은 화장대 위. lag는 박자 단위 */
+const RADIOS: { at: [number, number, number]; lag: number; wobble: number }[] = [
+  { at: [-9.4, 1.5, 7.2], lag: 0, wobble: 0.09 },
+  { at: [-24.6, 1.0, 11.4], lag: 0.5, wobble: 0.071 },
+]
+const BEAT = 0.62
 /** 엔카풍 5음계(요나누키 단조) — 가사 없이 반주 선율만 */
 const SCALE = [0, 1, 5, 7, 8, 12]
 const PHRASE = [3, 4, 3, 2, 1, 2, 0, -1, 0, 1, 2, 3, 2, 1, 0, -1]
+
+/** 사각파 선율 → 대역 제한(옛 스피커) + 느린 피치 워블 + 잡음. 정지 함수들을 돌려준다. */
+function radio(ctx: AudioContext, out: SpatialSource, lag: number, wobble: number): (() => void)[] {
+  const tone = ctx.createOscillator()
+  tone.type = 'square'
+  const band = ctx.createBiquadFilter()
+  band.type = 'bandpass'
+  band.frequency.value = 1100
+  band.Q.value = 0.9
+  const env = ctx.createGain()
+  env.gain.value = 0
+  const wob = ctx.createOscillator()
+  const wobDepth = ctx.createGain()
+  wob.frequency.value = wobble
+  wobDepth.gain.value = 9 // cents 대신 Hz — 낮은 음에서 반음 가까이 흔들린다
+  wob.connect(wobDepth).connect(tone.frequency)
+  tone.connect(band).connect(env).connect(out.out)
+  tone.start()
+  wob.start()
+  const stopNoise = noiseLoop(out, 'white', { type: 'highpass', freq: 3000 }, 0.3) // 잡음
+
+  let step = 0
+  let timer = 0
+  const tick = () => {
+    const t = ctx.currentTime
+    const deg = PHRASE[step % PHRASE.length]!
+    const semis = deg < 0 ? SCALE[SCALE.length + deg]! - 12 : SCALE[deg]!
+    tone.frequency.setTargetAtTime(220 * Math.pow(2, semis / 12), t, 0.03)
+    env.gain.cancelScheduledValues(t)
+    env.gain.setTargetAtTime(0.5, t, 0.02)
+    env.gain.setTargetAtTime(0.15, t + BEAT * 0.6, 0.12)
+    step++
+  }
+  const start = window.setTimeout(() => {
+    timer = window.setInterval(tick, BEAT * 1000)
+  }, lag * BEAT * 1000)
+  return [
+    () => {
+      tone.stop()
+      wob.stop()
+    },
+    stopNoise,
+    () => {
+      window.clearTimeout(start)
+      window.clearInterval(timer)
+    },
+  ]
+}
 
 /**
  * 센토 앰비언스(PRD 13절): 물방울, 탕 넘치는 소리, 환풍기, 보일러 저음, 라디오.
@@ -45,43 +97,8 @@ export function BathAudio({ enabled }: { enabled: boolean }) {
     // 보일러실 — 아주 낮은 웅웅거림, 벽 너머로 희미하게 들린다
     stops.push(noiseLoop(src([22.5, 1, -32], 30, 0.16), 'brown', { type: 'lowpass', freq: 90 }, 0.03))
 
-    // 라디오: 사각파 선율 → 대역 제한(옛 스피커) + 느린 피치 워블
-    const radio = src(RADIO.toArray() as [number, number, number], 14, 0.035)
-    const tone = ctx.createOscillator()
-    tone.type = 'square'
-    const band = ctx.createBiquadFilter()
-    band.type = 'bandpass'
-    band.frequency.value = 1100
-    band.Q.value = 0.9
-    const env = ctx.createGain()
-    env.gain.value = 0
-    const wob = ctx.createOscillator()
-    const wobDepth = ctx.createGain()
-    wob.frequency.value = 0.09
-    wobDepth.gain.value = 9 // cents 대신 Hz — 낮은 음에서 반음 가까이 흔들린다
-    wob.connect(wobDepth).connect(tone.frequency)
-    tone.connect(band).connect(env).connect(radio.out)
-    tone.start()
-    wob.start()
-    stops.push(() => {
-      tone.stop()
-      wob.stop()
-    })
-    stops.push(noiseLoop(radio, 'white', { type: 'highpass', freq: 3000 }, 0.3)) // 잡음
-
-    let step = 0
-    const beat = 0.62
-    const timer = window.setInterval(() => {
-      const t = ctx.currentTime
-      const deg = PHRASE[step % PHRASE.length]!
-      const semis = deg < 0 ? SCALE[SCALE.length + deg]! - 12 : SCALE[deg]!
-      tone.frequency.setTargetAtTime(220 * Math.pow(2, semis / 12), t, 0.03)
-      env.gain.cancelScheduledValues(t)
-      env.gain.setTargetAtTime(0.5, t, 0.02)
-      env.gain.setTargetAtTime(0.15, t + beat * 0.6, 0.12)
-      step++
-    }, beat * 1000)
-    stops.push(() => window.clearInterval(timer))
+    // 라디오 두 대 — 같은 엔카 반주인데 여탕 쪽은 반 박자 늦고 워블도 조금 다르다
+    for (const r of RADIOS) stops.push(...radio(ctx, src(r.at, 14, 0.035), r.lag, r.wobble))
 
     return () => {
       stops.forEach((s) => s())

@@ -34,6 +34,9 @@ export default function BathhouseWorld({ reduceMotion, audioEnabled, quality }: 
       <BathProps zone="dressing" />
       <BathProps zone="hall" />
       <BathProps zone="tub" />
+      <BathProps zone="w-dressing" />
+      <BathProps zone="w-hall" />
+      <BathProps zone="w-tub" />
       <BathFragments />
       <BathAudio enabled={audioEnabled} />
       <ServiceCorridorZone />

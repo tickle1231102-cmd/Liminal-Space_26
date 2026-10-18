@@ -1,8 +1,8 @@
 import seedrandom from 'seedrandom'
 
 export type Vec3 = [number, number, number]
-export type BathPropKind = 'stool' | 'oke' | 'rubber_duck' | 'towel_cart' | 'basket'
-export type BathZoneName = 'genkan' | 'dressing' | 'hall' | 'tub'
+export type BathPropKind = 'stool' | 'oke' | 'rubber_duck' | 'towel_cart' | 'basket' | 'caddy'
+export type BathZoneName = 'genkan' | 'dressing' | 'hall' | 'tub' | 'w-dressing' | 'w-hall' | 'w-tub'
 
 export type BathPropSpawn = { id: string; kind: BathPropKind; position: Vec3; rotationY: number }
 
@@ -39,7 +39,24 @@ const ZONES: Record<BathZoneName, { area: Rect; avoid: Rect[]; kinds: BathPropKi
     count: [4, 8],
   },
   tub: { area: { x: [-9.5, 3.5], z: [-33.5, -27.5] }, avoid: [], kinds: ['rubber_duck', 'rubber_duck', 'oke'], count: [3, 7] },
+  // 여탕 — 남탕 구역을 x=-14(욕실)·x=-10(탈의실) 기준으로 뒤집은 범위. 목욕 바구니가 더 많다
+  'w-dressing': {
+    area: { x: [-28.4, -11.6], z: [-8.5, 4.2] },
+    avoid: [{ x: [-23.5, -21.7], z: [-3.3, 1.3] }, { x: [-18.3, -16.5], z: [-3.3, 1.3] }],
+    kinds: ['basket', 'caddy', 'caddy', 'stool', 'towel_cart'],
+    count: [5, 9],
+  },
+  'w-hall': {
+    area: { x: [-40.5, -16], z: [-26, -11] },
+    avoid: [{ x: [-36.2, -33.8], z: [-22.3, -13.7] }],
+    kinds: ['stool', 'oke', 'caddy'],
+    count: [4, 8],
+  },
+  'w-tub': { area: { x: [-31.5, -18.5], z: [-33.5, -27.5] }, avoid: [], kinds: ['rubber_duck', 'oke', 'caddy'], count: [3, 6] },
 }
+
+/** 샤워 자리 앞 x — 남탕은 서쪽 벽(-14)에서 +x로, 여탕은 칸막이 반대 면에서 -x로 */
+const SEAT_X = { hall: (off: number) => -13 + off, 'w-hall': (off: number) => -15 - off } as const
 
 const inside = (r: Rect, x: number, z: number) => x >= r.x[0] && x <= r.x[1] && z >= r.z[0] && z <= r.z[1]
 
@@ -58,17 +75,18 @@ export function createBathDecor(seed: string, zone: BathZoneName): BathZoneDecor
     if (props.some((p) => Math.hypot(p.position[0] - x, p.position[2] - z) < 0.9)) continue
     let kind = spec.kinds[Math.floor(rng() * spec.kinds.length)]!
     if (kind === 'towel_cart' && carts++ > 0) kind = 'basket'
-    const y = zone === 'tub' ? 0.1 : kind === 'towel_cart' ? 0.5 : 0.2
+    const y = zone === 'tub' || zone === 'w-tub' ? 0.1 : kind === 'towel_cart' ? 0.5 : 0.2
     props.push({ id: `${zone}-bprop-${i++}`, kind, position: [x, y, z], rotationY: r(0, Math.PI * 2) })
   }
 
   // 샤워 자리마다 의자와 바가지 — 대부분 제자리, 몇 개는 밀려나 있다
-  if (zone === 'hall') {
+  if (zone === 'hall' || zone === 'w-hall') {
+    const sx = SEAT_X[zone]
     SEATS.forEach((z, s) => {
       const off = rng() < 0.25 ? r(0.4, 1.4) : r(0, 0.12)
-      if (rng() < 0.85) props.push({ id: `seat-stool-${s}`, kind: 'stool', position: [-13 + off, 0.15, z + r(-0.1, 0.1)], rotationY: r(-0.3, 0.3) })
+      if (rng() < 0.85) props.push({ id: `${zone}-seat-stool-${s}`, kind: 'stool', position: [sx(off), 0.15, z + r(-0.1, 0.1)], rotationY: r(-0.3, 0.3) })
       // 바가지는 의자 위에 엎어 두거나 바닥에
-      if (rng() < 0.7) props.push({ id: `seat-oke-${s}`, kind: 'oke', position: [-13 + off + r(-0.05, 0.05), 0.42, z], rotationY: r(0, 6) })
+      if (rng() < 0.7) props.push({ id: `${zone}-seat-oke-${s}`, kind: 'oke', position: [sx(off) + r(-0.05, 0.05), 0.42, z], rotationY: r(0, 6) })
     })
   }
 

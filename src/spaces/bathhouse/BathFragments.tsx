@@ -14,6 +14,9 @@ export const BATH_FRAGMENTS = [
   { id: 'bandai-coins', text: '반다이 양쪽 쟁반에 거스름돈이 그대로 남아 있다 — 남탕 쪽과 여탕 쪽 금액이 다르다' },
   { id: 'clock', text: '탈의실 시계는 2시 47분에 멈춰 있다' },
   { id: 'missing-key', text: '락커 열쇠 하나가 빠져 있다 (locker_bank.py)' },
+  { id: 'hair-tie', text: '여탕 화장대 위에 머리끈 하나 — 주인은 없다' },
+  { id: 'child-shoe', text: '노렌 안쪽 마루에 아이 신발 한 짝 — 신발장은 비어 있다' },
+  { id: 'kids-day', text: '子供の日 — 毎週水曜 小人無料 (겐칸 요금표의 小人 80円과 맞지 않는다)' },
 ] as const
 
 function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void) {
@@ -147,8 +150,43 @@ export function BathFragments() {
     [],
   )
 
+  const kidsDay = useMemo(
+    () =>
+      canvasTex(320, 400, (g) => {
+        g.fillStyle = '#f3e3e0'
+        g.fillRect(0, 0, 320, 400)
+        g.strokeStyle = '#9a4a4a'
+        g.lineWidth = 8
+        g.strokeRect(8, 8, 304, 384)
+        g.fillStyle = '#5a1e1e'
+        g.textAlign = 'center'
+        g.font = `bold 46px ${SERIF}`
+        g.fillText('子供の日', 160, 80)
+        g.font = `30px ${SERIF}`
+        g.fillText('毎週 水曜日', 160, 170)
+        g.fillText('小人 無料', 160, 225)
+        g.font = `20px ${SERIF}`
+        g.fillStyle = '#7a5a54'
+        g.fillText('お子様連れの方は番台へ', 160, 300)
+        g.fillText('平成三十二年 四月より', 160, 340)
+      }),
+    [],
+  )
+
   return (
     <group name="bathhouse-fragments">
+      {/* 여탕: 유아용 베드 위 칸막이에 붙은 '아이 날' 안내 — 날짜도 요금도 겐칸 요금표와 어긋난다 */}
+      <Plate position={[-10.15, 1.75, 5]} rotationY={-Math.PI / 2} size={[0.4, 0.5]} map={kidsDay} />
+      {/* 여탕 화장대 위 머리끈 */}
+      <mesh position={[-25.1, 0.758, 11.55]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.022, 0.004, 8, 20]} />
+        <meshStandardMaterial color="#7a1f2a" roughness={0.7} />
+      </mesh>
+      {/* 여탕 통로 마루의 아이 신발 한 짝 */}
+      <group position={[-8.3, 0, 11.1]} rotation={[0, 0.7, 0]}>
+        <Box position={[0, 0.02, 0]} size={[0.07, 0.04, 0.16]} color="#e8e4dc" solid={false} />
+        <Box position={[0, 0.055, -0.03]} size={[0.064, 0.04, 0.09]} color="#d65a6a" solid={false} />
+      </group>
       {/* 겐칸: 탈의실 벽의 요금표 — 남탕 노렌 오른쪽 */}
       <Plate position={[-1.2, 1.75, 8.14]} size={[0.6, 0.8]} map={price} />
       {/* 영업 중인데 바깥 유리문 안쪽에 휴업 팻말 */}
