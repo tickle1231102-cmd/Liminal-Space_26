@@ -31,7 +31,7 @@ const CAROUSEL_SEATS = {
   RideMount_0: (
     <RideSeat
       id="carousel-horse-0"
-      label="Carousel horse"
+      label="회전목마"
       model={parkModel('carousel_horse')}
       seat={[0, 0.25, 0]}
       collider={[0.2, 0.45, 0.5]}
@@ -47,7 +47,7 @@ const GONDOLA_SEATS = Object.fromEntries(
     <RideSeat
       key={i}
       id={`ferris-gondola-${i}`}
-      label="Ferris gondola"
+      label="관람차"
       seat={[0, -1.25, 0]}
       faceYaw={Math.PI} // look out toward the midway and plaza, not into the wheel frame
       exitFrom={ferrisExit}
