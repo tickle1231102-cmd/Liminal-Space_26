@@ -1,6 +1,6 @@
 # 공간 디자인 계획 — 새벽의 찜질방
 
-> **상태**: 1단계(화이트박스)까지 구현. 평면 좌표의 원본은 `src/spaces/jjimjilbang/layout.ts`다. 공간 ID `jjimjilbang` (`?space=jjimjilbang`, `src/spaces/jjimjilbang`, `art/blender/jjimjilbang`).
+> **상태**: 2단계(재질·랜드마크 모델·방별 빛)까지 구현. 평면 좌표의 원본은 `src/spaces/jjimjilbang/layout.ts`다. 공간 ID `jjimjilbang` (`?space=jjimjilbang`, `src/spaces/jjimjilbang`, `art/blender/jjimjilbang`).
 > [물 공간 아이디어](water-space-ideas.md) 3번 후보를 구체화한 문서다. AGENTS.md의 절대 규칙·디자인 원칙과 PRD 12~13절의 4구역 존 매핑 방식을 그대로 상속한다.
 > 좌표와 수치는 화이트박스용 초안이다. 조명·재질·세부 좌표는 Cursor에서 눈으로 보며 조정한다.
 
@@ -173,8 +173,9 @@ PRD 06절 원칙을 계승한다. 대사·가사·내레이션 없음.
 
 ### 새 모델 (`art/blender/jjimjilbang/*.py`)
 
-- **표면·모듈**: `surfaces`(장판, 황토, 암염 벽돌, 숯벽, 대리석, 카펫, 편백), `floor_jangpan_module`, `wall_hwangto_module`, `wall_salt_module`
-- **랜드마크**: `kiln_dome`(불가마), `cave_bank`(토굴 벌집 모듈), `foot_channel`(수로 테두리·돌다리), `counter`, `shoe_locker_kr`, `snack_bar`, `tv_wall`
+- **표면** (완료): `surfaces` — 장판, 카펫, 회벽, 콘크리트, 황토, 가마 벽돌, 암염 벽돌, 숯벽, 수로 돌, 얼음방 패널, 나무 2종. 바닥·벽은 모듈 모델 없이 박스에 이 재질을 크기대로 반복해 입힌다(`JjimKit`의 `surface`). 족욕 수로도 같은 방식이라 별도 모델이 없다.
+- **랜드마크** (완료): `kiln_dome`(불가마 벽돌 볼트 천장), `cave_bank`(토굴 2단 모듈), `counter`, `shoe_locker`
+- **랜드마크** (4단계): `snack_bar`, `tv_wall`
 - **소품(고정)**: `massage_chair`, `sikhye_fridge`, `charging_locker`, `comic_shelf`, `washer`, `ice_pipes`, `thermo_sign`, `hourglass`, `wall_clock`, `elevator_door`
 - **소품(물리)**: `mat`, `mokchim`, `egg`, `sikhye_can`, `hinoki_ball`, `foot_bucket`, `laundry_cart`, `straw_mat`, `yangmeori_towel`
 
@@ -199,7 +200,7 @@ zones/EntranceZone.tsx  AlleyZone.tsx  ThemeRoom.tsx(kind='salt'|'clay'|'kiln'|'
 
 ### 성능
 
-- 테마방 4개, 수면실, 세탁실은 각각 `DistanceLod`로 렌더를 끈다(콜라이더는 유지).
+- 테마방 4개, 수면실, 세탁실은 각각 `DistanceLod`로 렌더를 끈다(콜라이더는 유지). 아직 적용하지 않았다 — 방 안 조명까지 함께 꺼지면 셰이더가 다시 컴파일되어 끊길 수 있어, 5단계 성능 점검에서 조명을 밖에 둔 채 적용한다.
 - 매트·목침·토굴 모듈·신발장 칸은 `GltfInstances`로 인스턴싱한다.
 - 방마다 색이 다른 조명은 방 안 포인트 라이트 1~2개 + 발광 재질로 처리하고, 골목에서는 문틈 발광 면만 보이게 한다.
 - `quality: 'low'`에서는 얼음방 안개·불가마 아지랑이 입자를 줄이고 N8AO를 끈다.
@@ -214,7 +215,7 @@ zones/EntranceZone.tsx  AlleyZone.tsx  ThemeRoom.tsx(kind='salt'|'clay'|'kiln'|'
 |---|---|---|
 | 0 | `core` 리팩터링(Water, Steam, kit 추출), 공간 등록, PRD에 찜질방 절 추가, AGENTS.md 구조 목록 갱신 | `npm run build` 통과, 센토 화면 변화 없음, `?space=jjimjilbang`에서 빈 바닥에 스폰 |
 | 1 | 화이트박스: 6개 구역 박스 배치, 콜라이더, 고리 동선, 족욕 수로 물 영역 | 한 바퀴를 막힘 없이 돈다. 수로에서 느려진다 |
-| 2 | 표면 재질·모듈·랜드마크 모델(불가마 돔, 토굴 벌집, 수로, 카운터), 방별 조명 | 방 4개가 빛 색만으로 구분된다 |
+| 2 | 표면 재질·랜드마크 모델(불가마 볼트, 토굴 벌집, 카운터, 신발장), 방별 조명, 후처리 | 방 4개가 빛 색만으로 구분된다 |
 | 3 | 물리 소품과 시드 배치, 수면 셰이더, 얼음방 안개, 부력 | 재시드해도 랜드마크는 그대로이고 소품만 달라진다 |
 | 4 | 고정 소품, 파편, 오디오, 혼자 도는 안마의자·온도계·세탁기 | 파편 8종 배치, 수면실 정적 연출 동작 |
 | 5 | 모바일 프리셋 점검(`scripts/perf-checkpoint.mjs`), 이변 카탈로그 초안 | 모바일 기준 통과 |

@@ -24,20 +24,21 @@ export function HallZone() {
         <Box key={x} position={[x, 2.6, Z[0] + 0.18]} size={[2.2, 1.3, 0.08]} color="#10141c" emissive={LIGHT.tv} emissiveIntensity={0.9} solid={false} />
       ))}
       {/* 매점 — 카운터와 식혜 냉장고 */}
-      <Box position={[-11, 0.55, Z[0] + 3]} size={[7, 1.1, 0.9]} color={PALETTE.woodDark} />
+      <Box position={[-11, 0.55, Z[0] + 3]} size={[7, 1.1, 0.9]} color={PALETTE.woodDark} surface="WoodDark" />
       <Box position={[-15, 1, Z[0] + 1]} size={[1.2, 2, 0.9]} color="#e8eef0" emissive="#dff4ff" emissiveIntensity={0.5} />
       {/* 안마의자 열 — 서벽 */}
       {MASSAGE_Z.map((z) => (
         <Box key={z} position={[X[0] + 1, 0.6, z]} size={[1.4, 1.2, 0.9]} color="#3a2f2a" />
       ))}
       {/* 만화 서가와 충전함 — 남동 */}
-      <Box position={[12, 1, Z[1] - 0.45]} size={[5, 2, 0.5]} color={PALETTE.wood} />
+      <Box position={[12, 1, Z[1] - 0.45]} size={[5, 2, 0.5]} color={PALETTE.wood} surface="Wood" />
       <Box position={[X[1] - 0.4, 0.8, -16]} size={[0.5, 1.6, 1.4]} color={PALETTE.steel} />
 
-      <Lamp position={[-8, H - 0.05, -20]} intensity={14} distance={26} />
-      <Lamp position={[8, H - 0.05, -20]} intensity={14} distance={26} />
-      <Lamp position={[-8, H - 0.05, -32]} intensity={14} distance={26} />
-      <Lamp position={[8, H - 0.05, -32]} intensity={14} distance={26} />
+      {/* 홀은 이 공간에서 가장 밝다 (PRD 15절: 어둡게 만들지 않는다) */}
+      <Lamp position={[-8, H - 0.05, -20]} intensity={40} distance={30} />
+      <Lamp position={[8, H - 0.05, -20]} intensity={40} distance={30} />
+      <Lamp position={[-8, H - 0.05, -32]} intensity={40} distance={30} />
+      <Lamp position={[8, H - 0.05, -32]} intensity={40} distance={30} />
     </group>
   )
 }

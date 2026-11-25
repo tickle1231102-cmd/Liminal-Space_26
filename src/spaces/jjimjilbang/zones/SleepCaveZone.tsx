@@ -1,50 +1,56 @@
-import { Box, Ceiling, Floor, Lamp, LIGHT, PALETTE, Wall } from '../JjimKit'
+import { Box, Ceiling, Floor, Lamp, LIGHT, ModelRow, PALETTE, Wall } from '../JjimKit'
 import { DOORS, SLEEP } from '../layout'
 
 const { x: X, z: Z, h: H } = SLEEP
-/** 토굴 한 칸: 폭 2 m, 깊이 2.2 m, 2단 */
-const CAVE_W = 2
+/** 토굴 모듈(art/blender/jjimjilbang/cave_bank.py): 폭 2 m, 깊이 2.2 m, 2단. 원점 = 앞면 가운데 */
 const CAVE_D = 2.2
-const NORTH_X = [17, 19, 21, 23, 25, 27]
-const EAST_Z = [-37, -35, -33, -31, -29, -27, -25]
+const WALL_T = 0.125
+/** 북벽 줄 — 남쪽(+z)을 본다 */
+const NORTH_FRONT = Z[0] + WALL_T + CAVE_D
+const NORTH_X = [18, 20, 22, 24, 26]
+/** 동벽 줄 — 서쪽(-x)을 본다 */
+const EAST_FRONT = X[1] - WALL_T - CAVE_D
+const EAST_Z = [-36, -34, -32, -30, -28, -26]
+const CAVES = [
+  ...NORTH_X.map((x) => ({ position: [x, 0, NORTH_FRONT] as [number, number, number], rotationY: 0 })),
+  ...EAST_Z.map((z) => ({ position: [EAST_FRONT, 0, z] as [number, number, number], rotationY: -Math.PI / 2 })),
+]
+/** 굴 하나만 안쪽 등이 켜져 있다 (3단계에서 시드로 고른다) */
+const LIT_X = NORTH_X[2]
+
+/** 줄 끝과 모서리의 빈 틈을 메우는 흙벽 덩어리 [x0, x1, z0, z1] */
+const FILLS: [number, number, number, number][] = [
+  [X[0] + WALL_T, NORTH_X[0] - 1, Z[0] + WALL_T, NORTH_FRONT],
+  [NORTH_X[NORTH_X.length - 1] + 1, X[1] - WALL_T, Z[0] + WALL_T, EAST_Z[0] - 1],
+  [EAST_FRONT, X[1] - WALL_T, EAST_Z[EAST_Z.length - 1] + 1, Z[1] - WALL_T],
+]
 
 /**
  * 토굴 수면실 — 백스테이지. 낮은 천장 아래 2단 벌집 굴이 북벽과 동벽에 반복된다.
- * 화이트박스에서는 칸막이와 선반뿐이라 굴 안으로는 들어가지 못한다. x[16,30] · z[-40,-24]
+ * 굴은 들여다보기만 하고 들어가지 못한다. x[16,30] · z[-40,-24]
  */
 export function SleepCaveZone() {
-  const northZ = Z[0] + CAVE_D / 2
-  const eastX = X[1] - CAVE_D / 2
   return (
     <group name="jjimjilbang-sleep">
       <Floor x={X} z={Z} color="#b39d6c" />
-      <Ceiling x={X} z={Z} height={H} color={PALETTE.hwangto} />
-      <Wall axis="x" at={Z[0]} from={X[0]} to={X[1]} height={H} color={PALETTE.hwangto} />
-      <Wall axis="z" at={X[1]} from={Z[0]} to={Z[1]} height={H} color={PALETTE.hwangto} />
-      <Wall axis="x" at={Z[1]} from={X[0]} to={X[1]} height={H} color={PALETTE.hwangto} gaps={[DOORS.sleepToStaff]} />
+      <Ceiling x={X} z={Z} height={H} color={PALETTE.hwangto} surface="Hwangto" />
+      <Wall axis="x" at={Z[0]} from={X[0]} to={X[1]} height={H} color={PALETTE.hwangto} surface="Hwangto" />
+      <Wall axis="z" at={X[1]} from={Z[0]} to={Z[1]} height={H} color={PALETTE.hwangto} surface="Hwangto" />
+      <Wall axis="x" at={Z[1]} from={X[0]} to={X[1]} height={H} color={PALETTE.hwangto} surface="Hwangto" gaps={[DOORS.sleepToStaff]} />
 
-      {/* 북벽 굴 — 칸막이와 중간 선반 */}
-      {NORTH_X.map((x) => (
-        <Box key={x} position={[x, H / 2, northZ]} size={[0.2, H, CAVE_D]} color={PALETTE.hwangto} />
+      <ModelRow name="cave_bank" items={CAVES} />
+      {FILLS.map(([x0, x1, z0, z1]) => (
+        <Box
+          key={`${x0}:${z0}`}
+          position={[(x0 + x1) / 2, H / 2, (z0 + z1) / 2]}
+          size={[x1 - x0, H, z1 - z0]}
+          color={PALETTE.hwangto}
+          surface="Hwangto"
+        />
       ))}
-      <Box
-        position={[(NORTH_X[0] + NORTH_X[NORTH_X.length - 1]) / 2, H / 2, northZ]}
-        size={[NORTH_X[NORTH_X.length - 1] - NORTH_X[0], 0.12, CAVE_D]}
-        color={PALETTE.wood}
-      />
-      {/* 동벽 굴 */}
-      {EAST_Z.map((z) => (
-        <Box key={z} position={[eastX, H / 2, z]} size={[CAVE_D, H, 0.2]} color={PALETTE.hwangto} />
-      ))}
-      <Box
-        position={[eastX, H / 2, (EAST_Z[0] + EAST_Z[EAST_Z.length - 1]) / 2]}
-        size={[CAVE_D, 0.12, EAST_Z[EAST_Z.length - 1] - EAST_Z[0]]}
-        color={PALETTE.wood}
-      />
-      {/* 굴 하나만 안쪽 등이 켜져 있다 (3단계에서 시드로 고른다) */}
-      <pointLight position={[NORTH_X[2] + CAVE_W / 2, 0.7, northZ]} color={LIGHT.clay} intensity={1.2} distance={4} decay={1.6} />
+      <pointLight position={[LIT_X, 0.6, NORTH_FRONT - 1.2]} color={LIGHT.clay} intensity={1.6} distance={3.5} decay={1.6} />
 
-      <Lamp position={[22, H - 0.05, -31]} color={LIGHT.dim} intensity={2} distance={12} />
+      <Lamp position={[21.5, H - 0.05, -31]} color={LIGHT.dim} intensity={2} distance={12} />
     </group>
   )
 }

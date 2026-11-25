@@ -15,25 +15,25 @@ export function StaffZone() {
   return (
     <group name="jjimjilbang-staff">
       {/* 통로 */}
-      <Floor x={STAFF.x} z={STAFF.z} color={FLOOR} />
+      <Floor x={STAFF.x} z={STAFF.z} color={FLOOR} surface="Concrete" />
       <Ceiling x={STAFF.x} z={STAFF.z} height={H} color={WALL} />
       <Wall axis="z" at={STAFF.x[0]} from={STAFF.z[0]} to={LINK.z[0]} height={H} color={WALL} gaps={[furnace]} />
       <Wall axis="z" at={STAFF.x[1]} from={STAFF.z[0]} to={STAFF.z[1]} height={H} color={WALL} gaps={[DOORS.staffToLaundry]} />
       <Wall axis="x" at={STAFF.z[1]} from={LINK.x[0]} to={STAFF.x[1]} height={H} color={WALL} />
 
       {/* 아궁이 알코브 — 불가마 뒷벽(철창)까지 한 걸음. 옆은 막혀 있다 */}
-      <Floor x={[kilnBack, STAFF.x[0]]} z={furnace} color={FLOOR} />
-      <Box position={[(kilnBack + STAFF.x[0]) / 2, H / 2, furnace[0] - 0.1]} size={[STAFF.x[0] - kilnBack, H, 0.2]} color={PALETTE.charcoal} />
-      <Box position={[(kilnBack + STAFF.x[0]) / 2, H / 2, furnace[1] + 0.1]} size={[STAFF.x[0] - kilnBack, H, 0.2]} color={PALETTE.charcoal} />
+      <Floor x={[kilnBack, STAFF.x[0]]} z={furnace} color={FLOOR} surface="Concrete" />
+      <Box position={[(kilnBack + STAFF.x[0]) / 2, H / 2, furnace[0] - 0.1]} size={[STAFF.x[0] - kilnBack, H, 0.2]} color={PALETTE.charcoal} surface="Charcoal" />
+      <Box position={[(kilnBack + STAFF.x[0]) / 2, H / 2, furnace[1] + 0.1]} size={[STAFF.x[0] - kilnBack, H, 0.2]} color={PALETTE.charcoal} surface="Charcoal" />
       <pointLight position={[kilnBack + 0.5, 1, (furnace[0] + furnace[1]) / 2]} color={LIGHT.kiln} intensity={1.5} distance={5} decay={1.6} />
 
       {/* 연결부 — 카운터 뒤 문으로 */}
-      <Floor x={[ENTRANCE.x[1], LINK.x[1]]} z={LINK.z} color={FLOOR} />
+      <Floor x={[ENTRANCE.x[1], LINK.x[1]]} z={LINK.z} color={FLOOR} surface="Concrete" />
       <Ceiling x={LINK.x} z={LINK.z} height={H} color={WALL} />
       <Wall axis="x" at={LINK.z[0]} from={LINK.x[0]} to={LINK.x[1]} height={H} color={WALL} />
 
       {/* 세탁실 */}
-      <Floor x={LAUNDRY.x} z={LAUNDRY.z} color={FLOOR} />
+      <Floor x={LAUNDRY.x} z={LAUNDRY.z} color={FLOOR} surface="Concrete" />
       <Ceiling x={LAUNDRY.x} z={LAUNDRY.z} height={H} color={WALL} />
       <Wall axis="x" at={LAUNDRY.z[1]} from={LAUNDRY.x[0]} to={LAUNDRY.x[1]} height={H} color={WALL} />
       <Wall axis="z" at={LAUNDRY.x[1]} from={LAUNDRY.z[0]} to={LAUNDRY.z[1]} height={H} color={WALL} />

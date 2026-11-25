@@ -15,8 +15,8 @@ export function JjimAtmosphere() {
         <Lightformer form="rect" intensity={2} color="#fff1c9" position={[0, 5, 0]} rotation={[Math.PI / 2, 0, 0]} scale={[12, 6, 1]} />
         <Lightformer form="rect" intensity={0.6} color="#e9dcc0" position={[0, 2, 12]} scale={[20, 4, 1]} />
       </Environment>
-      <ambientLight intensity={0.45} color="#f0e2c4" />
-      <hemisphereLight args={['#f4e6c8', '#2a241c', 0.5]} />
+      <ambientLight intensity={0.22} color="#f0e2c4" />
+      <hemisphereLight args={['#f4e6c8', '#2a241c', 0.28]} />
     </>
   )
 }
