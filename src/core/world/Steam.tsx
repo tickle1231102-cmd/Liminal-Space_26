@@ -5,6 +5,7 @@ import * as THREE from 'three'
 const VERT = /* glsl */ `
   uniform float uTime;
   uniform float uScale;
+  uniform float uRise;
   attribute float aSeed;
   varying float vAlpha;
   #include <fog_pars_vertex>
@@ -12,7 +13,7 @@ const VERT = /* glsl */ `
     // 각 입자는 수면에서 올라가며 퍼지고 사라진다 — aSeed로 주기를 엇갈린다
     float life = fract(uTime * (0.045 + 0.03 * fract(aSeed * 7.1)) + aSeed);
     vec3 p = position;
-    p.y += life * 2.6;
+    p.y += life * uRise;
     p.x += sin(uTime * 0.3 + aSeed * 40.0) * 0.35 * life;
     p.z += cos(uTime * 0.25 + aSeed * 23.0) * 0.35 * life;
     vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
@@ -36,8 +37,9 @@ const FRAG = /* glsl */ `
 `
 
 /**
- * 탕 위로 피어오르는 김 — 크고 흐릿한 포인트 스프라이트. 저사양에선 개수를 줄인다.
+ * 수면 위로 피어오르는 김 — 크고 흐릿한 포인트 스프라이트. 저사양에선 개수를 줄인다.
  * reduceMotion이면 멈춘 채 옅게 남는다.
+ * rise가 음수면 아래로 가라앉는다(찬 안개). color·rise는 마운트 때 한 번만 읽는다.
  */
 export function Steam({
   x,
@@ -45,6 +47,8 @@ export function Steam({
   y,
   count,
   opacity = 0.05,
+  color = '#f3ece2',
+  rise = 2.6,
   reduceMotion,
 }: {
   x: [number, number]
@@ -52,6 +56,9 @@ export function Steam({
   y: number
   count: number
   opacity?: number
+  color?: string
+  /** 입자가 수명 동안 움직이는 높이(m). 음수면 하강 */
+  rise?: number
   reduceMotion: boolean
 }) {
   const geo = useMemo(() => {
@@ -67,11 +74,11 @@ export function Steam({
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     g.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1))
     g.boundingSphere = new THREE.Sphere(
-      new THREE.Vector3((x[0] + x[1]) / 2, y + 1.5, (z[0] + z[1]) / 2),
+      new THREE.Vector3((x[0] + x[1]) / 2, y + (rise / 2.6) * 1.5, (z[0] + z[1]) / 2),
       Math.hypot(x[1] - x[0], z[1] - z[0]) / 2 + 3,
     )
     return g
-  }, [x, z, y, count])
+  }, [x, z, y, count, rise])
 
   const mat = useRef(
     new THREE.ShaderMaterial({
@@ -81,7 +88,8 @@ export function Steam({
         ...THREE.UniformsLib.fog,
         uTime: { value: 0 },
         uScale: { value: 2400 },
-        uColor: { value: new THREE.Color('#f3ece2') },
+        uColor: { value: new THREE.Color(color) },
+        uRise: { value: rise },
         uOpacity: { value: opacity },
       },
       transparent: true,

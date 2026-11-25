@@ -47,12 +47,13 @@
 - `docs/STORE_CHECKLIST.md` — 3스토어 출시 체크리스트
 - `src/app` — 앱 셸: 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지. 공간은 `spaces/registry`로만 안다.
 - `src/core` — 모든 공간이 공유하는 엔진 계층. 특정 공간을 몰라야 한다.
-  - `core/player` 1인칭 컨트롤러·상호작용·탑승 상태 / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`
+  - `core/player` 1인칭 컨트롤러·상호작용·탑승 상태 / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`·물(`water` 영역 레지스트리, `WaterSurface` 수면, `Steam` 김·찬 안개)
 - `src/spaces` — 공간(버전)별 코드. 아래 "공간 구조" 절 참고.
   - `spaces/types.ts` 공간 계약(`SpaceDefinition`), `spaces/registry.ts` 공간 목록
   - `spaces/park` 야간 놀이공원(기본값): `zones/`(정문 광장·미드웨이·먹거리·백스테이지), `objects/`(풍선·탑승 시트), `audio/`, 분위기·파편·절차적 소품
   - `spaces/school` 심야 학교(PRD 12절): `zones/`(현관·복도·급식실·강당/방송실), `objects/`, `audio/`, 키트·텍스처·파편
   - `spaces/bathhouse` 심야 센토(PRD 13절): `zones/`(겐칸·탈의실·욕실·보일러실, 여탕 날개는 `WomenDressingZone` + `BathHallZone side="women"` 거울상, 보일러실 철창까지 가는 `ServiceCorridorZone`), `BathKit`(콜라이더·모듈 배치 키트, 모델은 `art/blender/bathhouse`), 분위기
+  - `spaces/jjimjilbang` 새벽의 찜질방(PRD 15절, 계획은 `docs/space-jjimjilbang-plan.md`): 현재 0단계 — 공간 등록과 빈 바닥만 있다. 구역은 `zones/`에 입구·찜질 골목·대청마루·수면실 순으로 채운다.
 - `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<space>/<name>.py`) → `npm run assets:build` → `public/assets/models/<space>/`
 - `public/assets` — glTF/오디오 (출처는 `ATTRIBUTION.md`)
 - `electron/` — Steam용 Electron 셸

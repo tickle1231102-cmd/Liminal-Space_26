@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { useWaterVolume } from '../../core/world/water'
+import { useWaterVolume } from './water'
 
 /** 이음매 없는 잔물결 노멀맵 (정수 주파수 사인 합 → 반복해도 경계가 없다). */
 function rippleNormalMap(size = 256, seed = 1) {
@@ -41,8 +41,8 @@ function rippleNormalMap(size = 256, seed = 1) {
 }
 
 /**
- * 탕 수면. 노멀맵 두 장(normalMap · clearcoatNormalMap)을 서로 다른 방향으로 흘려
- * 겹치는 잔물결을 만들고, 환경 반사(BathAtmosphere의 라이트포머)를 비춘다.
+ * 수면(탕·수로). 노멀맵 두 장(normalMap · clearcoatNormalMap)을 서로 다른 방향으로 흘려
+ * 겹치는 잔물결을 만들고, 공간이 깔아 둔 환경맵 반사를 비춘다.
  * 물 영역을 등록해 플레이어 감속·부력이 이 수면을 쓴다.
  */
 export function Water({
