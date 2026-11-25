@@ -1,4 +1,5 @@
-import { Box, Ceiling, Floor, Lamp, LIGHT, ModelRow, PALETTE, Wall } from '../JjimKit'
+import { DistanceLod } from '../../../core/world/DistanceLod'
+import { Box, Ceiling, FillLight, Floor, Lamp, LIGHT, ModelRow, PALETTE, Wall } from '../JjimKit'
 import { CAVES, DOORS, SLEEP } from '../layout'
 import { useLitCave } from '../JjimProps'
 
@@ -32,6 +33,8 @@ export function SleepCaveZone() {
       : [EAST_FRONT + 1.3, TIER_Y[lit.tier]!, EAST_Z[lit.index]!]
   return (
     <group name="jjimjilbang-sleep">
+      {/* 홀 어디서든 문 너머로 보이므로 홀 전체를 덮는 거리까지는 그린다 */}
+      <DistanceLod center={[(X[0] + X[1]) / 2, 0, (Z[0] + Z[1]) / 2]} near={46}>
       <Floor x={X} z={Z} color="#b39d6c" />
       <Ceiling x={X} z={Z} height={H} color={PALETTE.hwangto} surface="Hwangto" />
       <Wall axis="x" at={Z[0]} from={X[0]} to={X[1]} height={H} color={PALETTE.hwangto} surface="Hwangto" />
@@ -48,7 +51,8 @@ export function SleepCaveZone() {
           surface="Hwangto"
         />
       ))}
-      <pointLight position={litPos} color={LIGHT.clay} intensity={1.6} distance={3.5} decay={1.6} />
+      </DistanceLod>
+      <FillLight position={litPos} color={LIGHT.clay} intensity={1.6} distance={3.5} />
 
       <Lamp position={[21.5, H - 0.05, -31]} color={LIGHT.dim} intensity={2} distance={12} />
     </group>

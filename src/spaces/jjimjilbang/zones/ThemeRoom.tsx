@@ -1,4 +1,5 @@
-import { Box, Ceiling, Floor, LIGHT, Model, PALETTE, Wall, type Surface } from '../JjimKit'
+import { DistanceLod } from '../../../core/world/DistanceLod'
+import { Box, Ceiling, FillLight, Floor, LIGHT, Model, PALETTE, Wall, type Surface } from '../JjimKit'
 import { KilnGauge } from '../JjimMachines'
 import { Steam } from '../../../core/world/Steam'
 import type { SpaceWorldProps } from '../../types'
@@ -43,6 +44,8 @@ export function ThemeRoom({
   const glow = look.glow ? { color: look.light, intensity: look.glow } : undefined
   return (
     <group name={`jjimjilbang-room-${kind}`}>
+      {/* 방 안은 멀어지면 그리지 않는다(콜라이더는 유지). 조명은 밖에 둔다 — 함께 꺼지면 조명 수가 바뀌어 셰이더가 다시 컴파일된다 */}
+      <DistanceLod center={[cx, 0, cz]} near={30}>
       <Floor x={x} z={z} color={look.floor} surface={look.floorSurface} />
       <Ceiling x={x} z={z} height={h} color={look.wall} surface={look.ceilingSurface} />
       <Wall axis="x" at={z[0]} from={x[0]} to={x[1]} height={h} color={look.wall} surface={look.wallSurface} />
@@ -59,12 +62,10 @@ export function ThemeRoom({
           {/* 벽돌 볼트 천장 (art/blender/jjimjilbang/kiln_dome.py) — 틈새의 붉은 빛은 바닥 가까이에서 올라온다 */}
           <Model name="kiln_dome" position={[cx, 0, cz]} />
           <KilnGauge reduceMotion={reduceMotion} />
-          <pointLight position={[cx, 0.5, cz]} color={look.light} intensity={look.intensity} distance={13} decay={1.6} />
         </>
       ) : (
         <>
           <Wall axis="z" at={far} from={z[0]} to={z[1]} height={h} color={look.wall} surface={look.wallSurface} glow={glow} />
-          <pointLight position={[cx, h - 0.5, cz]} color={look.light} intensity={look.intensity} distance={12} decay={1.6} />
         </>
       )}
       {kind === 'salt' && (
@@ -85,13 +86,16 @@ export function ThemeRoom({
           <Steam x={[x[0] - 1.6, x[0] + 0.6]} z={ROOMS.ice.door} y={0.55} rise={-0.45} color="#e4f3fb" count={quality === 'high' ? 48 : 14} opacity={0.12} reduceMotion={reduceMotion} />
         </>
       )}
-      {/* 문 쪽으로 새는 빛 — 골목 바닥에 방의 색이 깔린다 */}
-      <pointLight
+      </DistanceLod>
+      {/* 방의 빛 — 불가마만 바닥 가까이에서 올라온다 */}
+      <FillLight position={kind === 'kiln' ? [cx, 0.5, cz] : [cx, h - 0.5, cz]} color={look.light} intensity={look.intensity} distance={kind === 'kiln' ? 13 : 12} />
+      {/* 문 쪽으로 새는 빛 — 골목 바닥에 방의 색이 깔린다 (데스크톱 전용. 모바일은 문 위 표시판과 방 안의 빛으로 구분한다) */}
+      <FillLight
+        only="high"
         position={[west ? x[1] - 1.2 : x[0] + 1.2, 1.4, (ROOMS[kind].door[0] + ROOMS[kind].door[1]) / 2]}
         color={look.light}
         intensity={look.intensity * 0.8}
         distance={8}
-        decay={1.6}
       />
     </group>
   )

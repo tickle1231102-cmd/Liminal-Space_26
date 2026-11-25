@@ -1,4 +1,5 @@
-import { Box, Ceiling, Floor, Lamp, LIGHT, PALETTE, Wall } from '../JjimKit'
+import { DistanceLod } from '../../../core/world/DistanceLod'
+import { Box, Ceiling, FillLight, Floor, Lamp, LIGHT, PALETTE, Wall } from '../JjimKit'
 import { Washers } from '../JjimMachines'
 import { DOORS, ENTRANCE, LAUNDRY, LINK, ROOMS, STAFF } from '../layout'
 
@@ -26,14 +27,15 @@ export function StaffZone({ reduceMotion }: { reduceMotion: boolean }) {
       <Floor x={[kilnBack, STAFF.x[0]]} z={furnace} color={FLOOR} surface="Concrete" />
       <Box position={[(kilnBack + STAFF.x[0]) / 2, H / 2, furnace[0] - 0.1]} size={[STAFF.x[0] - kilnBack, H, 0.2]} color={PALETTE.charcoal} surface="Charcoal" />
       <Box position={[(kilnBack + STAFF.x[0]) / 2, H / 2, furnace[1] + 0.1]} size={[STAFF.x[0] - kilnBack, H, 0.2]} color={PALETTE.charcoal} surface="Charcoal" />
-      <pointLight position={[kilnBack + 0.5, 1, (furnace[0] + furnace[1]) / 2]} color={LIGHT.kiln} intensity={1.5} distance={5} decay={1.6} />
+      <FillLight only="high" position={[kilnBack + 0.5, 1, (furnace[0] + furnace[1]) / 2]} color={LIGHT.kiln} intensity={1.5} distance={5} />
 
       {/* 연결부 — 카운터 뒤 문으로 */}
       <Floor x={[ENTRANCE.x[1], LINK.x[1]]} z={LINK.z} color={FLOOR} surface="Concrete" />
       <Ceiling x={LINK.x} z={LINK.z} height={H} color={WALL} />
       <Wall axis="x" at={LINK.z[0]} from={LINK.x[0]} to={LINK.x[1]} height={H} color={WALL} />
 
-      {/* 세탁실 */}
+      {/* 세탁실 — 통로와 수면실에서만 보인다 */}
+      <DistanceLod center={[(LAUNDRY.x[0] + LAUNDRY.x[1]) / 2, 0, (LAUNDRY.z[0] + LAUNDRY.z[1]) / 2]} near={32}>
       <Floor x={LAUNDRY.x} z={LAUNDRY.z} color={FLOOR} surface="Concrete" />
       <Ceiling x={LAUNDRY.x} z={LAUNDRY.z} height={H} color={WALL} />
       <Wall axis="x" at={LAUNDRY.z[1]} from={LAUNDRY.x[0]} to={LAUNDRY.x[1]} height={H} color={WALL} />
@@ -42,9 +44,13 @@ export function StaffZone({ reduceMotion }: { reduceMotion: boolean }) {
       <Washers reduceMotion={reduceMotion} />
       <Box position={[26, 0.35, -12]} size={[2.4, 0.7, 1.6]} color="#e08a3c" />
 
-      <Lamp position={[19, H - 0.05, -16]} intensity={3} distance={12} />
-      <Lamp position={[19, H - 0.05, 0]} intensity={3} distance={12} />
-      <Lamp position={[19, H - 0.05, 13]} intensity={3} distance={12} />
+      </DistanceLod>
+
+      <Lamp position={[19, H - 0.05, -16]} intensity={3} distance={12} lit="high" />
+      <Lamp position={[19, H - 0.05, 0]} intensity={3} distance={12} lit="high" />
+      <Lamp position={[19, H - 0.05, 13]} intensity={3} distance={12} lit="high" />
+      {/* 모바일: 통로 등 셋 대신 가운데 하나로 */}
+      <FillLight only="low" position={[19, H - 0.3, -5]} intensity={6} distance={24} />
       <Lamp position={[11, H - 0.05, 14]} intensity={3} distance={12} />
       <Lamp position={[25.5, H - 0.05, -17]} intensity={4} distance={12} />
     </group>

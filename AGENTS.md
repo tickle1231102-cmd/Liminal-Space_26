@@ -53,7 +53,7 @@
   - `spaces/park` 야간 놀이공원(기본값): `zones/`(정문 광장·미드웨이·먹거리·백스테이지), `objects/`(풍선·탑승 시트), `audio/`, 분위기·파편·절차적 소품
   - `spaces/school` 심야 학교(PRD 12절): `zones/`(현관·복도·급식실·강당/방송실), `objects/`, `audio/`, 키트·텍스처·파편
   - `spaces/bathhouse` 심야 센토(PRD 13절): `zones/`(겐칸·탈의실·욕실·보일러실, 여탕 날개는 `WomenDressingZone` + `BathHallZone side="women"` 거울상, 보일러실 철창까지 가는 `ServiceCorridorZone`), `BathKit`(콜라이더·모듈 배치 키트, 모델은 `art/blender/bathhouse`), 분위기
-  - `spaces/jjimjilbang` 새벽의 찜질방(PRD 15절, 계획은 `docs/space-jjimjilbang-plan.md`): `layout.ts`(평면 좌표 원본), `JjimKit`(박스 셸 + 공용 표면 재질 + 모델 배치, 모델은 `art/blender/jjimjilbang`, 공용 재질은 `art/blender/lib/jjim_common.py`), `zones/`(입구·찜질 골목·테마방·대청마루·토굴 수면실·직원 통로), `createJjimDecor`·`JjimProp(s)`(시드 소품 배치, 밀기/끌기·부력), `JjimMachines`(혼자 움직이는 안마의자·온도계·세탁기·TV), `JjimFragments`, `JjimAudio`. 현재 4단계 — 남은 것은 모바일 성능 점검과 이변 카탈로그.
+  - `spaces/jjimjilbang` 새벽의 찜질방(PRD 15절, 계획은 `docs/space-jjimjilbang-plan.md`): `layout.ts`(평면 좌표 원본), `JjimKit`(박스 셸 + 공용 표면 재질 + 모델 배치, 모델은 `art/blender/jjimjilbang`, 공용 재질은 `art/blender/lib/jjim_common.py`), `zones/`(입구·찜질 골목·테마방·대청마루·토굴 수면실·직원 통로), `createJjimDecor`·`JjimProp(s)`(시드 소품 배치, 밀기/끌기·부력), `JjimMachines`(혼자 움직이는 안마의자·온도계·세탁기·TV), `JjimFragments`, `JjimAudio`. 계획의 5단계까지 구현 — 모바일('low')에서는 `JjimKit`의 `FillLight`/`Lamp lit`으로 조명 수를 줄인다. 실기기 성능 측정은 아직 없다.
 - `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<space>/<name>.py`) → `npm run assets:build` → `public/assets/models/<space>/`
 - `public/assets` — glTF/오디오 (출처는 `ATTRIBUTION.md`)
 - `electron/` — Steam용 Electron 셸

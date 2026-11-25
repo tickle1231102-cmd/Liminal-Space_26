@@ -1,4 +1,4 @@
-import { Ceiling, Floor, Lamp, LIGHT, Model, Wall } from '../JjimKit'
+import { Ceiling, FillLight, Floor, Lamp, Model, Wall } from '../JjimKit'
 import { ChargingLeds, MassageChairs, TvWall } from '../JjimMachines'
 import { DOORS, HALL, HALL_FIX } from '../layout'
 
@@ -22,7 +22,7 @@ export function HallZone({ reduceMotion }: { reduceMotion: boolean }) {
       {/* 매점 — 불이 켜져 있다. 계란 바구니는 가득하고 식혜 냉장고는 비었다 */}
       <Model name="snack_bar" position={[HALL_FIX.snackBar[0], 0, HALL_FIX.snackBar[1]]} />
       <Model name="sikhye_fridge" position={[HALL_FIX.fridge[0], 0, HALL_FIX.fridge[1]]} />
-      <pointLight position={[HALL_FIX.snackBar[0], 2.6, HALL_FIX.snackBar[1] - 1]} color={LIGHT.fluorescent} intensity={8} distance={10} decay={1.6} />
+      <FillLight only="high" position={[HALL_FIX.snackBar[0], 2.6, HALL_FIX.snackBar[1] - 1]} intensity={8} distance={10} />
       <MassageChairs reduceMotion={reduceMotion} />
       {/* 만화 서가(북쪽을 본다)와 충전함(서쪽을 본다) — 남동 */}
       <Model name="comic_shelf" position={[HALL_FIX.comicShelf[0], 0, HALL_FIX.comicShelf[1]]} rotationY={Math.PI} />
@@ -30,10 +30,13 @@ export function HallZone({ reduceMotion }: { reduceMotion: boolean }) {
       <ChargingLeds reduceMotion={reduceMotion} />
 
       {/* 홀은 이 공간에서 가장 밝다 (PRD 15절: 어둡게 만들지 않는다) */}
-      <Lamp position={[-8, H - 0.05, -20]} intensity={40} distance={30} />
-      <Lamp position={[8, H - 0.05, -20]} intensity={40} distance={30} />
-      <Lamp position={[-8, H - 0.05, -32]} intensity={40} distance={30} />
-      <Lamp position={[8, H - 0.05, -32]} intensity={40} distance={30} />
+      <Lamp position={[-8, H - 0.05, -20]} intensity={40} distance={30} lit="high" />
+      <Lamp position={[8, H - 0.05, -20]} intensity={40} distance={30} lit="high" />
+      <Lamp position={[-8, H - 0.05, -32]} intensity={40} distance={30} lit="high" />
+      <Lamp position={[8, H - 0.05, -32]} intensity={40} distance={30} lit="high" />
+      {/* 모바일: 네 등 대신 가운데 줄 두 개로 */}
+      <FillLight only="low" position={[0, H - 0.4, -20]} intensity={75} distance={36} />
+      <FillLight only="low" position={[0, H - 0.4, -32]} intensity={75} distance={36} />
     </group>
   )
 }

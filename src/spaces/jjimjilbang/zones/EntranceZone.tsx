@@ -1,4 +1,4 @@
-import { Box, Ceiling, Floor, Lamp, Model, ModelRow, PALETTE, Wall } from '../JjimKit'
+import { Box, Ceiling, FillLight, Floor, Lamp, Model, ModelRow, PALETTE, Wall } from '../JjimKit'
 import { ALLEY, DOORS, ENTRANCE } from '../layout'
 
 const { x: X, z: Z, h: H } = ENTRANCE
@@ -35,8 +35,10 @@ export function EntranceZone() {
       {/* 카운터 — 동쪽, 손님 쪽이 서쪽. 뒤 문(z 13~15)은 카운터 북쪽 끝 너머에 있다 (counter.py) */}
       <Model name="counter" position={[X[1] - 1.6, 0, 19]} rotationY={-Math.PI / 2} />
 
-      <Lamp position={[0, H - 0.05, 22]} />
-      <Lamp position={[0, H - 0.05, 15]} />
+      <Lamp position={[0, H - 0.05, 22]} lit="high" />
+      <Lamp position={[0, H - 0.05, 15]} lit="high" />
+      {/* 모바일: 두 등 사이에서 하나로 */}
+      <FillLight only="low" position={[0, H - 0.3, 18.5]} intensity={11} distance={18} />
     </group>
   )
 }

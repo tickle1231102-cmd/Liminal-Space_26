@@ -281,17 +281,46 @@ export function Wall({
   )
 }
 
-/** 천장 등 — 작은 발광 판과 그림자 없는 포인트 라이트. */
+/**
+ * 품질 프리셋에 따라 조명을 고른다. 포인트 라이트는 화면의 모든 픽셀에서 계산되므로 모바일('low')에서는
+ * 방을 읽는 데 꼭 필요한 것만 남긴다. only='high'는 데스크톱 전용 보조광, only='low'는 그 자리를 메우는 대체광.
+ * 프리셋은 실행 중 바뀌지 않으므로 조명 수가 바뀌어 셰이더가 다시 컴파일되는 일은 없다.
+ */
+export type LightTier = 'high' | 'low'
+const tierOn = (only?: LightTier) => !only || only === getQuality()
+
+/** 그림자 없는 포인트 라이트 하나 (보조광·대체광용). */
+export function FillLight({
+  position,
+  color = LIGHT.fluorescent,
+  intensity,
+  distance,
+  only,
+}: {
+  position: Vec3
+  color?: string
+  intensity: number
+  distance: number
+  only?: LightTier
+}) {
+  if (!tierOn(only)) return null
+  return <pointLight position={position} color={color} intensity={intensity} distance={distance} decay={1.6} />
+}
+
+/** 천장 등 — 작은 발광 판과 그림자 없는 포인트 라이트. lit=false면 등기구만 보이고 빛은 내지 않는다. */
 export function Lamp({
   position,
   color = LIGHT.fluorescent,
   intensity = 6,
   distance = 14,
+  lit,
 }: {
   position: Vec3
   color?: string
   intensity?: number
   distance?: number
+  /** 이 프리셋에서만 빛을 낸다 (등기구는 늘 보인다) */
+  lit?: LightTier
 }) {
   return (
     <group position={position}>
@@ -299,7 +328,7 @@ export function Lamp({
         <boxGeometry args={[1.2, 0.06, 0.3]} />
         <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2} />
       </mesh>
-      <pointLight position={[0, -0.25, 0]} color={color} intensity={intensity} distance={distance} decay={1.6} />
+      {tierOn(lit) && <pointLight position={[0, -0.25, 0]} color={color} intensity={intensity} distance={distance} decay={1.6} />}
     </group>
   )
 }

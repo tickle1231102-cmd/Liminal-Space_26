@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { GltfVisual } from '../../core/world/GltfAsset'
 import { ModelBoundary } from '../../core/world/ModelBoundary'
-import { Box, LIGHT, ModelRow, jjimModel } from './JjimKit'
+import { Box, FillLight, LIGHT, ModelRow, jjimModel } from './JjimKit'
 import { HALL, HALL_FIX, ROOMS, WASHERS } from './layout'
 import { useActiveChair } from './JjimProps'
 
@@ -176,7 +176,7 @@ export function TvWall() {
         </group>
       ))}
       {/* 세 화면이 바닥에 깔아 놓는 푸르스름한 빛 */}
-      <pointLight position={[0, HALL_FIX.tvY, z + 1.5]} color={LIGHT.tv} intensity={5} distance={12} decay={1.6} />
+      <FillLight only="high" position={[0, HALL_FIX.tvY, z + 1.5]} color={LIGHT.tv} intensity={5} distance={12} />
     </>
   )
 }
