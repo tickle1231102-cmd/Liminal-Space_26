@@ -1,30 +1,30 @@
-import { CuboidCollider, RigidBody } from '@react-three/rapier'
 import type { SpaceWorldProps } from '../types'
-
-/** 전체 평면 범위 (docs/space-jjimjilbang-plan.md 2절 배치도) */
-const X: [number, number] = [-16, 30]
-const Z: [number, number] = [-40, 26]
+import { JjimAtmosphere } from './JjimAtmosphere'
+import { EntranceZone } from './zones/EntranceZone'
+import { AlleyZone } from './zones/AlleyZone'
+import { ThemeRoom } from './zones/ThemeRoom'
+import { HallZone } from './zones/HallZone'
+import { SleepCaveZone } from './zones/SleepCaveZone'
+import { StaffZone } from './zones/StaffZone'
 
 /**
- * 새벽의 찜질방 — docs/space-jjimjilbang-plan.md.
- * 0단계: 공간 등록과 스폰 확인용 빈 바닥만 있다. 구역(zones/)은 1단계 화이트박스에서 채운다.
+ * 새벽의 찜질방 — PRD 15절, docs/space-jjimjilbang-plan.md.
+ * 입구 → 찜질 골목(족욕 수로·테마방 4개) → 대청마루 홀 → 토굴 수면실 → 직원 통로 → 카운터 뒤 문으로
+ * 한 바퀴 도는 고리 동선. 1단계 화이트박스: 박스와 콜라이더, 수로 물 영역까지. 소품·오디오·후처리는 뒤 단계.
  */
-export default function JjimjilbangWorld(_props: SpaceWorldProps) {
-  const w = X[1] - X[0]
-  const d = Z[1] - Z[0]
+export default function JjimjilbangWorld({ reduceMotion }: SpaceWorldProps) {
   return (
     <>
-      <color attach="background" args={['#14110d']} />
-      <fog attach="fog" args={['#2b2620', 10, 50]} />
-      <ambientLight intensity={0.5} color="#f0e2c4" />
-      <hemisphereLight args={['#f4e6c8', '#2a241c', 0.6]} />
-      <RigidBody type="fixed" colliders={false} position={[(X[0] + X[1]) / 2, -0.1, (Z[0] + Z[1]) / 2]}>
-        <CuboidCollider args={[w / 2, 0.1, d / 2]} />
-        <mesh receiveShadow>
-          <boxGeometry args={[w, 0.2, d]} />
-          <meshStandardMaterial color="#c9b27a" roughness={0.6} />
-        </mesh>
-      </RigidBody>
+      <JjimAtmosphere />
+      <EntranceZone />
+      <AlleyZone reduceMotion={reduceMotion} />
+      <ThemeRoom kind="salt" />
+      <ThemeRoom kind="clay" />
+      <ThemeRoom kind="kiln" />
+      <ThemeRoom kind="ice" />
+      <HallZone />
+      <SleepCaveZone />
+      <StaffZone />
     </>
   )
 }
