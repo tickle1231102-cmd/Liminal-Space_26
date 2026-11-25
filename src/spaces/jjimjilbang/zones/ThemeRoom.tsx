@@ -1,4 +1,6 @@
 import { Box, Ceiling, Floor, LIGHT, Model, PALETTE, Wall, type Surface } from '../JjimKit'
+import { Steam } from '../../../core/world/Steam'
+import type { SpaceWorldProps } from '../../types'
 import { ALLEY, DOORS, ROOMS, type RoomKind } from '../layout'
 
 type Look = {
@@ -24,7 +26,11 @@ const LOOK: Record<RoomKind, Look> = {
  * 테마방 한 칸 — 골목 벽(x=±6)에 붙는다. 문은 AlleyZone의 벽이 뚫고, 여기는 나머지 세 벽과 방의 빛을 맡는다.
  * 방마다 재질과 빛 색이 달라 골목에서 문틈만 봐도 구분된다 (암염 분홍 · 황토 주황 · 불가마 빨강 · 얼음 청백).
  */
-export function ThemeRoom({ kind }: { kind: RoomKind }) {
+export function ThemeRoom({
+  kind,
+  reduceMotion = false,
+  quality = 'high',
+}: { kind: RoomKind } & Partial<Pick<SpaceWorldProps, 'reduceMotion' | 'quality'>>) {
   const { x, z, h } = ROOMS[kind]
   const look = LOOK[kind]
   const west = x[1] <= ALLEY.x[0]
@@ -57,6 +63,13 @@ export function ThemeRoom({ kind }: { kind: RoomKind }) {
         <>
           <Wall axis="z" at={far} from={z[0]} to={z[1]} height={h} color={look.wall} surface={look.wallSurface} glow={glow} />
           <pointLight position={[cx, h - 0.5, cz]} color={look.light} intensity={look.intensity} distance={12} decay={1.6} />
+        </>
+      )}
+      {kind === 'ice' && (
+        <>
+          {/* 찬 안개 — 천장 배관 높이에서 바닥으로 가라앉고, 문턱 밖 골목으로 조금 넘친다 */}
+          <Steam x={[x[0] + 0.4, x[1] - 0.4]} z={[z[0] + 0.4, z[1] - 0.4]} y={h - 0.2} rise={-(h - 0.3)} color="#e4f3fb" count={quality === 'high' ? 260 : 70} opacity={0.16} reduceMotion={reduceMotion} />
+          <Steam x={[x[0] - 1.6, x[0] + 0.6]} z={ROOMS.ice.door} y={0.55} rise={-0.45} color="#e4f3fb" count={quality === 'high' ? 48 : 14} opacity={0.12} reduceMotion={reduceMotion} />
         </>
       )}
       {/* 문 쪽으로 새는 빛 — 골목 바닥에 방의 색이 깔린다 */}

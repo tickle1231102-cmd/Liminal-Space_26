@@ -161,8 +161,11 @@ export function Box({
     </mesh>
   )
   if (!solid) return mesh
+  // 콜라이더를 명시한다 — colliders="cuboid"(자동)는 메시에서 한 박자 늦게 만들어져, 같은 프레임에
+  // 생긴 소품이 첫 로드 때 바닥을 뚫고 떨어진다
   return (
-    <RigidBody type="fixed" colliders="cuboid" position={position} rotation={rotation}>
+    <RigidBody type="fixed" colliders={false} position={position} rotation={rotation}>
+      <CuboidCollider args={[size[0] / 2, size[1] / 2, size[2] / 2]} />
       {mesh}
     </RigidBody>
   )

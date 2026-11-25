@@ -1,5 +1,6 @@
 import { Box, Ceiling, Floor, Lamp, LIGHT, ModelRow, PALETTE, Wall } from '../JjimKit'
 import { DOORS, SLEEP } from '../layout'
+import { useLitCave } from '../JjimProps'
 
 const { x: X, z: Z, h: H } = SLEEP
 /** 토굴 모듈(art/blender/jjimjilbang/cave_bank.py): 폭 2 m, 깊이 2.2 m, 2단. 원점 = 앞면 가운데 */
@@ -15,8 +16,8 @@ const CAVES = [
   ...NORTH_X.map((x) => ({ position: [x, 0, NORTH_FRONT] as [number, number, number], rotationY: 0 })),
   ...EAST_Z.map((z) => ({ position: [EAST_FRONT, 0, z] as [number, number, number], rotationY: -Math.PI / 2 })),
 ]
-/** 굴 하나만 안쪽 등이 켜져 있다 (3단계에서 시드로 고른다) */
-const LIT_X = NORTH_X[2]
+/** 굴 바닥에서 등까지 높이: 아랫단·윗단 (cave_bank.py FLOORS + 0.45) */
+const TIER_Y = [0.57, 1.75]
 
 /** 줄 끝과 모서리의 빈 틈을 메우는 흙벽 덩어리 [x0, x1, z0, z1] */
 const FILLS: [number, number, number, number][] = [
@@ -30,6 +31,12 @@ const FILLS: [number, number, number, number][] = [
  * 굴은 들여다보기만 하고 들어가지 못한다. x[16,30] · z[-40,-24]
  */
 export function SleepCaveZone() {
+  // 굴 하나만 안쪽 등이 켜져 있다 — 어느 굴인지는 재시드마다 바뀐다. 들여다보면 다른 굴과 똑같다
+  const lit = useLitCave(NORTH_X.length, EAST_Z.length)
+  const litPos: [number, number, number] =
+    lit.bank === 'north'
+      ? [NORTH_X[lit.index]!, TIER_Y[lit.tier]!, NORTH_FRONT - 1.3]
+      : [EAST_FRONT + 1.3, TIER_Y[lit.tier]!, EAST_Z[lit.index]!]
   return (
     <group name="jjimjilbang-sleep">
       <Floor x={X} z={Z} color="#b39d6c" />
@@ -48,7 +55,7 @@ export function SleepCaveZone() {
           surface="Hwangto"
         />
       ))}
-      <pointLight position={[LIT_X, 0.6, NORTH_FRONT - 1.2]} color={LIGHT.clay} intensity={1.6} distance={3.5} decay={1.6} />
+      <pointLight position={litPos} color={LIGHT.clay} intensity={1.6} distance={3.5} decay={1.6} />
 
       <Lamp position={[21.5, H - 0.05, -31]} color={LIGHT.dim} intensity={2} distance={12} />
     </group>
