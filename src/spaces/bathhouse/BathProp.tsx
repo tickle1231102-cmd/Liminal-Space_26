@@ -14,6 +14,7 @@ const SPEC: Record<BathPropKind, { half: [number, number, number]; mass: number;
   rubber_duck: { half: [0.06, 0.05, 0.075], mass: 0.05, float: 3.2, label: '고무 오리', hold: 0.7 },
   towel_cart: { half: [0.47, 0.5, 0.26], mass: 18, float: 0.6, label: '수건 카트', hold: 0.5 },
   basket: { half: [0.23, 0.11, 0.16], mass: 0.8, float: 1.4, label: '바구니', hold: 0.6 },
+  caddy: { half: [0.15, 0.06, 0.1], mass: 0.7, float: 1.5, label: '목욕 바구니', hold: 0.6 },
 }
 
 /** kind → art/blender/bathhouse/<model>.py */
@@ -23,6 +24,7 @@ const MODEL: Record<BathPropKind, string> = {
   rubber_duck: 'rubber_duck',
   towel_cart: 'towel_cart',
   basket: 'basket',
+  caddy: 'caddy_basket',
 }
 
 /** 센토 소품 — 밀기/끌기(core/objects/useDraggable) + 탕에 들어가면 부력으로 뜬다. */

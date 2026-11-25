@@ -80,10 +80,12 @@ export type InstanceXform = { position: [number, number, number]; rotationY?: nu
 
 /**
  * Many copies of one model as InstancedMeshes (one draw call per material).
- * Visual only — pass colliders separately (e.g. one cuboid per fence run).
+ * Visual only by default — pass colliders separately (e.g. one cuboid per fence run), or set
+ * `solid` to give every copy the model's own COL_* cuboids (instance scale is not applied to them).
  */
-export function GltfInstances({ url, items }: { url: string; items: InstanceXform[] }) {
+export function GltfInstances({ url, items, solid = false }: { url: string; items: InstanceXform[]; solid?: boolean }) {
   const { scene } = useGLTF(url)
+  const colliders = useMemo(() => (solid ? extract(scene.clone(true)).colliders : []), [scene, solid])
   const parts = useMemo(() => {
     scene.updateMatrixWorld(true)
     const out: { key: string; mesh: Mesh }[] = []
@@ -122,6 +124,14 @@ export function GltfInstances({ url, items }: { url: string; items: InstanceXfor
           }}
         />
       ))}
+      {colliders.length > 0 &&
+        items.map((it, i) => (
+          <RigidBody key={i} type="fixed" colliders={false} position={it.position} rotation={[0, it.rotationY ?? 0, 0]}>
+            {colliders.map((c) => (
+              <CuboidCollider key={c.key} args={c.half} position={c.position} rotation={c.rotation} friction={1} />
+            ))}
+          </RigidBody>
+        ))}
     </>
   )
 }

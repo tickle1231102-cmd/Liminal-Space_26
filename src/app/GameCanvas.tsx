@@ -132,14 +132,35 @@ function BootPlaceholder() {
   )
 }
 
+const KEY = isTouchPrimary() ? 'E 버튼' : 'E'
+const VERB = { push: '잡기', grab: '잡기', ride: '타기' } as const
+
+/**
+ * 상호작용 안내. 바라보는 중이면 "E 잡기 · 바가지", 들고 있는 동안에는 무엇을 들고 있는지와
+ * 놓는 법을 계속 보여 준다 (휘두르다 놓치면 바로 사라져서 놓친 걸 알 수 있다).
+ */
 function InteractPrompt() {
-  const { focused, heldId } = useInteraction()
-  if (!focused && !heldId) return null
-  const label = heldId
-    ? 'E / Tap — release'
-    : focused
-      ? `E / Tap — ${focused.kind}`
-      : null
-  if (!label) return null
-  return <div className="hud-prompt">{label}</div>
+  const { focused, heldId, getAll } = useInteraction()
+  const held = heldId ? getAll().find((i) => i.id === heldId) : undefined
+  if (held) {
+    const riding = held.kind === 'ride'
+    return (
+      <div className="hud-prompt hud-prompt--held" key={held.id}>
+        <span className="hud-prompt__main">
+          <span className="hud-prompt__dot" />
+          <strong>{held.label}</strong> {riding ? '타는 중' : '들고 있음'}
+        </span>
+        <span className="hud-prompt__sub">
+          {KEY} {riding ? '내리기' : '놓기'}
+          {!riding && ' · 세게 휘두르면 놓침'}
+        </span>
+      </div>
+    )
+  }
+  if (!focused) return null
+  return (
+    <div className="hud-prompt" key={focused.id}>
+      {KEY} {VERB[focused.kind]} · {focused.label}
+    </div>
+  )
 }

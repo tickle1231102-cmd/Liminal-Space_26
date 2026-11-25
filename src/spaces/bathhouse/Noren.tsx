@@ -7,10 +7,21 @@ import { bathModel } from './BathKit'
 /**
  * 노렌 (art/blender/bathhouse/noren.py) — 세 폭이 각자 윗변을 축으로 흔들린다.
  * 평소엔 느리게 일렁이고, 플레이어가 지나가면 그 폭이 진행 방향으로 밀려 젖혀졌다 돌아온다.
- * position = 막대 중심. 충돌 없음.
+ * position = 막대 중심, rotationY = 막대 축 회전. 충돌 없음.
+ * model: 'noren'(남탕, 남색 ゆ) · 'noren_women'(여탕, 붉은 女).
  */
-export function Noren({ position, reduceMotion }: { position: [number, number, number]; reduceMotion: boolean }) {
-  const { scene } = useGLTF(bathModel('noren'))
+export function Noren({
+  position,
+  rotationY = 0,
+  model = 'noren',
+  reduceMotion,
+}: {
+  position: [number, number, number]
+  rotationY?: number
+  model?: 'noren' | 'noren_women'
+  reduceMotion: boolean
+}) {
+  const { scene } = useGLTF(bathModel(model))
   const root = useMemo(() => scene.clone(true), [scene])
   const panels = useMemo(
     () => [0, 1, 2].map((i) => root.getObjectByName(`Panel_${i}`)).filter((o): o is THREE.Object3D => !!o),
@@ -39,5 +50,5 @@ export function Noren({ position, reduceMotion }: { position: [number, number, n
     })
   })
 
-  return <primitive object={root} position={position} />
+  return <primitive object={root} position={position} rotation={[0, rotationY, 0]} />
 }

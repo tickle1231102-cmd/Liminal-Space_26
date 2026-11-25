@@ -239,6 +239,9 @@ export function Wall({
   )
 }
 
+/** 여탕 쪽 백열등 — 같은 전구인데 아주 조금 더 분홍빛 (PRD 13절 여탕 날개) */
+export const LAMP_WOMEN = '#ffc9a6'
+
 /**
  * 법랑 갓 펜던트 등 (art/blender/bathhouse/pendant_lamp.py) + 그림자 없는 포인트 라이트.
  * position = 전구 위치.
@@ -298,7 +301,10 @@ export const bathModel = (name: string) =>
   spaceModel('bathhouse', getQuality() === 'low' ? `${name}.mobile` : name)
 
 /** art/blender/bathhouse/tile_wall_module.py — 2 m 모듈, 높이 6 m, 두께 0.25 m (원래 크기로 배치). */
-const TILE_WALL = { url: bathModel('tile_wall_module'), length: 2, height: 6, thickness: 0.25 }
+const TILE_WALL_FULL = { url: bathModel('tile_wall_module'), length: 2, height: 6, thickness: 0.25 }
+/** art/blender/bathhouse/tile_partition_module.py — 남탕·여탕 칸막이. 천장(6 m)보다 1.8 m 낮다 */
+const TILE_PARTITION = { url: bathModel('tile_partition_module'), length: 2, height: 4.2, thickness: 0.25 }
+export const PARTITION_TOP = TILE_PARTITION.height
 
 /**
  * 욕실 타일 벽. 구간 길이는 2 m 배수로 잡아야 타일 줄눈이 모듈 사이에서 이어진다.
@@ -310,13 +316,17 @@ export function TileWall({
   from,
   to,
   gaps = [],
+  partition = false,
 }: {
   axis: 'x' | 'z'
   at: number
   from: number
   to: number
   gaps?: [number, number][]
+  /** 천장까지 닿지 않는 칸막이 모듈 — 위로 김·빛·소리가 넘어간다 */
+  partition?: boolean
 }) {
+  const TILE_WALL = partition ? TILE_PARTITION : TILE_WALL_FULL
   const runs: [number, number][] = []
   let cursor = from
   for (const [g0, g1] of [...gaps].sort((p, q) => p[0] - q[0])) {
@@ -328,7 +338,7 @@ export function TileWall({
   const h = TILE_WALL.height
   return (
     <>
-      <ModelBoundary label="tile_wall_module">
+      <ModelBoundary label={partition ? 'tile_partition_module' : 'tile_wall_module'}>
         {runs.map(([a, b]) => (
           <ModuleRun
             key={`${a}:${b}`}
@@ -373,6 +383,18 @@ export function Model({
   return (
     <ModelBoundary label={name}>
       <GltfAsset url={bathModel(name)} position={position} rotationY={rotationY} />
+    </ModelBoundary>
+  )
+}
+
+/**
+ * 같은 모델 여러 개 — 인스턴싱으로 재질당 드로우콜 하나. 각 사본은 모델의 COL_* 콜라이더를 가진다.
+ * 락커·샤워 칸·화장대처럼 줄지어 반복되는 모델에 쓴다 (Model을 여러 번 쓰면 사본마다 재질 수만큼 그린다).
+ */
+export function ModelRow({ name, items }: { name: string; items: { position: [number, number, number]; rotationY?: number }[] }) {
+  return (
+    <ModelBoundary label={name}>
+      <GltfInstances url={bathModel(name)} items={items} solid />
     </ModelBoundary>
   )
 }

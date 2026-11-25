@@ -13,7 +13,8 @@ export function BoilerZone() {
       <Ceiling x={[14, 26]} z={[-36, -20]} height={H} color="#4a4844" surface="Concrete" />
 
       <Wall axis="z" at={26} from={-36} to={-20} height={H} color="#7a756c" surface="Concrete" />
-      <Wall axis="x" at={-36} from={14} to={26} height={H} color="#7a756c" surface="Concrete" />
+      {/* 북쪽 벽 — 배관 복도 쪽 철창(ServiceCorridorZone) 자리만 비운다 */}
+      <Wall axis="x" at={-36} from={14} to={26} height={H} gaps={[[15, 17]]} color="#7a756c" surface="Concrete" />
       <Wall axis="x" at={-20} from={14} to={26} height={H} color="#7a756c" surface="Concrete" />
 
       {/* 보일러 본체 — art/blender/bathhouse/boiler.py */}
