@@ -1,23 +1,16 @@
 import { Box, Ceiling, Floor, Lamp, LIGHT, ModelRow, PALETTE, Wall } from '../JjimKit'
-import { DOORS, SLEEP } from '../layout'
+import { CAVES, DOORS, SLEEP } from '../layout'
 import { useLitCave } from '../JjimProps'
 
 const { x: X, z: Z, h: H } = SLEEP
-/** 토굴 모듈(art/blender/jjimjilbang/cave_bank.py): 폭 2 m, 깊이 2.2 m, 2단. 원점 = 앞면 가운데 */
-const CAVE_D = 2.2
 const WALL_T = 0.125
-/** 북벽 줄 — 남쪽(+z)을 본다 */
-const NORTH_FRONT = Z[0] + WALL_T + CAVE_D
-const NORTH_X = [18, 20, 22, 24, 26]
-/** 동벽 줄 — 서쪽(-x)을 본다 */
-const EAST_FRONT = X[1] - WALL_T - CAVE_D
-const EAST_Z = [-36, -34, -32, -30, -28, -26]
-const CAVES = [
+const { northX: NORTH_X, eastZ: EAST_Z, northFront: NORTH_FRONT, eastFront: EAST_FRONT } = CAVES
+const CAVE_ITEMS = [
   ...NORTH_X.map((x) => ({ position: [x, 0, NORTH_FRONT] as [number, number, number], rotationY: 0 })),
   ...EAST_Z.map((z) => ({ position: [EAST_FRONT, 0, z] as [number, number, number], rotationY: -Math.PI / 2 })),
 ]
-/** 굴 바닥에서 등까지 높이: 아랫단·윗단 (cave_bank.py FLOORS + 0.45) */
-const TIER_Y = [0.57, 1.75]
+/** 굴 안 등 높이: 아랫단·윗단 */
+const TIER_Y = CAVES.floors.map((f) => f + 0.45)
 
 /** 줄 끝과 모서리의 빈 틈을 메우는 흙벽 덩어리 [x0, x1, z0, z1] */
 const FILLS: [number, number, number, number][] = [
@@ -45,7 +38,7 @@ export function SleepCaveZone() {
       <Wall axis="z" at={X[1]} from={Z[0]} to={Z[1]} height={H} color={PALETTE.hwangto} surface="Hwangto" />
       <Wall axis="x" at={Z[1]} from={X[0]} to={X[1]} height={H} color={PALETTE.hwangto} surface="Hwangto" gaps={[DOORS.sleepToStaff]} />
 
-      <ModelRow name="cave_bank" items={CAVES} />
+      <ModelRow name="cave_bank" items={CAVE_ITEMS} />
       {FILLS.map(([x0, x1, z0, z1]) => (
         <Box
           key={`${x0}:${z0}`}

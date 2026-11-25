@@ -1,4 +1,5 @@
 import { Box, Ceiling, Floor, Lamp, LIGHT, PALETTE, Wall } from '../JjimKit'
+import { Washers } from '../JjimMachines'
 import { DOORS, ENTRANCE, LAUNDRY, LINK, ROOMS, STAFF } from '../layout'
 
 const H = STAFF.h
@@ -9,7 +10,7 @@ const WALL = '#a9a59b'
  * 직원 통로·세탁실·아궁이 알코브 — 백스테이지. 수면실 남쪽 문에서 내려와 카운터 뒤 문으로 나간다(고리 동선).
  * 통로 x[17,21] · z[-24,15.5], 세탁실 x[21,30] · z[-24,-10], 연결부 x[5,17] · z[12.5,15.5]
  */
-export function StaffZone() {
+export function StaffZone({ reduceMotion }: { reduceMotion: boolean }) {
   const furnace = DOORS.staffToFurnace
   const kilnBack = ROOMS.kiln.x[1]
   return (
@@ -38,9 +39,7 @@ export function StaffZone() {
       <Wall axis="x" at={LAUNDRY.z[1]} from={LAUNDRY.x[0]} to={LAUNDRY.x[1]} height={H} color={WALL} />
       <Wall axis="z" at={LAUNDRY.x[1]} from={LAUNDRY.z[0]} to={LAUNDRY.z[1]} height={H} color={WALL} />
       {/* 세탁기 열과 찜질복 더미 */}
-      {[-22.5, -21, -19.5].map((z) => (
-        <Box key={z} position={[LAUNDRY.x[1] - 0.6, 0.5, z]} size={[0.9, 1, 0.9]} color="#dfe3e4" />
-      ))}
+      <Washers reduceMotion={reduceMotion} />
       <Box position={[26, 0.35, -12]} size={[2.4, 0.7, 1.6]} color="#e08a3c" />
 
       <Lamp position={[19, H - 0.05, -16]} intensity={3} distance={12} />

@@ -51,3 +51,34 @@ export const CHANNEL = {
   bridges: [-5, 5],
   bridgeWidth: 1.2,
 }
+
+const WALL_T = 0.125
+
+/** 토굴 모듈(cave_bank.py: 폭 2 m, 깊이 2.2 m) 배치 — 북벽 줄은 남쪽(+z), 동벽 줄은 서쪽(-x)을 본다 */
+export const CAVES = {
+  depth: 2.2,
+  northX: [18, 20, 22, 24, 26],
+  northFront: SLEEP.z[0] + WALL_T + 2.2,
+  eastZ: [-36, -34, -32, -30, -28, -26],
+  eastFront: SLEEP.x[1] - WALL_T - 2.2,
+  /** 굴 바닥 높이: 아랫단·윗단 (cave_bank.py FLOORS) */
+  floors: [0.12, 1.3],
+}
+
+/** 홀의 고정 랜드마크 (모델 원점 = 바닥 중심) */
+export const HALL_FIX = {
+  /** 안마의자 열 — 서벽에 등을 대고 동쪽을 본다 */
+  massage: { x: HALL.x[0] + WALL_T + 0.6, z: [-32, -29, -26, -23, -20, -17] },
+  snackBar: [-11, HALL.z[0] + 3] as Range,
+  fridge: [-15, HALL.z[0] + WALL_T + 0.4] as Range,
+  /** 북벽 TV 중심 x, 화면 중심 높이 */
+  tvX: [-3, 0, 3],
+  tvY: 2.6,
+  comicShelf: [12, HALL.z[1] - WALL_T - 0.225] as Range,
+  charging: [HALL.x[1] - WALL_T - 0.225, -16] as Range,
+  /** 양머리 수건이 놓인 매트 — 시드로 흩뿌리는 매트와 달리 늘 같은 자리 */
+  towelMat: [9, -22] as Range,
+}
+
+/** 세탁기 열 — 세탁실 동벽에 등을 대고 서쪽을 본다. 첫 번째만 돌고 있다 */
+export const WASHERS = { x: LAUNDRY.x[1] - WALL_T - 0.45, z: [-22.5, -21.4, -20.3], running: 0 }

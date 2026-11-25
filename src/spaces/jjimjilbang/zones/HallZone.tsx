@@ -1,15 +1,14 @@
-import { Box, Ceiling, Floor, Lamp, LIGHT, PALETTE, Wall } from '../JjimKit'
-import { DOORS, HALL } from '../layout'
+import { Ceiling, Floor, Lamp, LIGHT, Model, Wall } from '../JjimKit'
+import { ChargingLeds, MassageChairs, TvWall } from '../JjimMachines'
+import { DOORS, HALL, HALL_FIX } from '../layout'
 
 const { x: X, z: Z, h: H } = HALL
-const MASSAGE_Z = [-32, -29, -26, -23, -20, -17]
-const TV_X = [-3, 0, 3]
 
 /**
- * 대청마루 홀 — 원작의 먹거리 골목. 천장이 높고 넓으며 물리 오브젝트가 모이는 곳(소품은 3단계).
+ * 대청마루 홀 — 원작의 먹거리 골목. 천장이 높고 넓으며 물리 오브젝트가 모이는 곳.
  * 랜드마크: 북벽 TV, 북서 매점, 서벽 안마의자 열, 남동 만화 서가. x[-16,16] · z[-40,-12]
  */
-export function HallZone() {
+export function HallZone({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <group name="jjimjilbang-hall">
       <Floor x={X} z={Z} />
@@ -19,20 +18,16 @@ export function HallZone() {
       <Wall axis="z" at={X[0]} from={Z[0]} to={Z[1]} height={H} />
       <Wall axis="z" at={X[1]} from={Z[0]} to={Z[1]} height={H} gaps={[DOORS.hallToSleep]} />
 
-      {/* TV 벽 — 화면조정 무늬 대신 푸른 발광 판 */}
-      {TV_X.map((x) => (
-        <Box key={x} position={[x, 2.6, Z[0] + 0.18]} size={[2.2, 1.3, 0.08]} color="#10141c" emissive={LIGHT.tv} emissiveIntensity={0.9} solid={false} />
-      ))}
-      {/* 매점 — 카운터와 식혜 냉장고 */}
-      <Box position={[-11, 0.55, Z[0] + 3]} size={[7, 1.1, 0.9]} color={PALETTE.woodDark} surface="WoodDark" />
-      <Box position={[-15, 1, Z[0] + 1]} size={[1.2, 2, 0.9]} color="#e8eef0" emissive="#dff4ff" emissiveIntensity={0.5} />
-      {/* 안마의자 열 — 서벽 */}
-      {MASSAGE_Z.map((z) => (
-        <Box key={z} position={[X[0] + 1, 0.6, z]} size={[1.4, 1.2, 0.9]} color="#3a2f2a" />
-      ))}
-      {/* 만화 서가와 충전함 — 남동 */}
-      <Box position={[12, 1, Z[1] - 0.45]} size={[5, 2, 0.5]} color={PALETTE.wood} surface="Wood" />
-      <Box position={[X[1] - 0.4, 0.8, -16]} size={[0.5, 1.6, 1.4]} color={PALETTE.steel} />
+      <TvWall />
+      {/* 매점 — 불이 켜져 있다. 계란 바구니는 가득하고 식혜 냉장고는 비었다 */}
+      <Model name="snack_bar" position={[HALL_FIX.snackBar[0], 0, HALL_FIX.snackBar[1]]} />
+      <Model name="sikhye_fridge" position={[HALL_FIX.fridge[0], 0, HALL_FIX.fridge[1]]} />
+      <pointLight position={[HALL_FIX.snackBar[0], 2.6, HALL_FIX.snackBar[1] - 1]} color={LIGHT.fluorescent} intensity={8} distance={10} decay={1.6} />
+      <MassageChairs reduceMotion={reduceMotion} />
+      {/* 만화 서가(북쪽을 본다)와 충전함(서쪽을 본다) — 남동 */}
+      <Model name="comic_shelf" position={[HALL_FIX.comicShelf[0], 0, HALL_FIX.comicShelf[1]]} rotationY={Math.PI} />
+      <Model name="charging_locker" position={[HALL_FIX.charging[0], 0, HALL_FIX.charging[1]]} rotationY={-Math.PI / 2} />
+      <ChargingLeds reduceMotion={reduceMotion} />
 
       {/* 홀은 이 공간에서 가장 밝다 (PRD 15절: 어둡게 만들지 않는다) */}
       <Lamp position={[-8, H - 0.05, -20]} intensity={40} distance={30} />

@@ -1,6 +1,6 @@
 # 공간 디자인 계획 — 새벽의 찜질방
 
-> **상태**: 3단계(물리 소품·시드 배치·얼음방 안개)까지 구현. 평면 좌표의 원본은 `src/spaces/jjimjilbang/layout.ts`다. 공간 ID `jjimjilbang` (`?space=jjimjilbang`, `src/spaces/jjimjilbang`, `art/blender/jjimjilbang`).
+> **상태**: 4단계(고정 소품·혼자 움직이는 기계·파편·오디오)까지 구현. 남은 것은 5단계(모바일 성능 점검, 이변 카탈로그). 평면 좌표의 원본은 `src/spaces/jjimjilbang/layout.ts`다. 공간 ID `jjimjilbang` (`?space=jjimjilbang`, `src/spaces/jjimjilbang`, `art/blender/jjimjilbang`).
 > [물 공간 아이디어](water-space-ideas.md) 3번 후보를 구체화한 문서다. AGENTS.md의 절대 규칙·디자인 원칙과 PRD 12~13절의 4구역 존 매핑 방식을 그대로 상속한다.
 > 좌표와 수치는 화이트박스용 초안이다. 조명·재질·세부 좌표는 Cursor에서 눈으로 보며 조정한다.
 
@@ -143,8 +143,9 @@ PRD 06절 원칙을 계승한다. 대사·가사·내레이션 없음.
 - **방마다 다른 시계**: 골목, 황토방, 홀, 수면실의 시각이 전부 다르다.
 - **매점 외상 메모**: 식혜 개수만 바를 정(正) 자로 빼곡하다.
 - **만화책 한 권**: 서가 앞에 펼친 채 엎어져 있다.
+- **양머리 수건**: 늘 같은 자리의 매트 위에 가지런히 놓여 있다.
 - **수면실 '정숙' 팻말**: 켜진 토굴 앞에만 하나 더 걸려 있다.
-- **센토와의 고리(선택)**: 분실물 상자에 케로린 바가지 하나. 두 공간이 이어져 있다는 암시만 남긴다.
+- **센토와의 고리(선택, 미구현)**: 분실물 상자에 케로린 바가지 하나. 두 공간이 이어져 있다는 암시만 남긴다. 넣을지 정해지지 않아 아직 넣지 않았다.
 
 ## 6. 톤 관리 메모
 
@@ -175,8 +176,8 @@ PRD 06절 원칙을 계승한다. 대사·가사·내레이션 없음.
 
 - **표면** (완료): `surfaces` — 장판, 카펫, 회벽, 콘크리트, 황토, 가마 벽돌, 암염 벽돌, 숯벽, 수로 돌, 얼음방 패널, 나무 2종. 바닥·벽은 모듈 모델 없이 박스에 이 재질을 크기대로 반복해 입힌다(`JjimKit`의 `surface`). 족욕 수로도 같은 방식이라 별도 모델이 없다.
 - **랜드마크** (완료): `kiln_dome`(불가마 벽돌 볼트 천장), `cave_bank`(토굴 2단 모듈), `counter`, `shoe_locker`
-- **랜드마크** (4단계): `snack_bar`, `tv_wall`
-- **소품(고정)**: `massage_chair`, `sikhye_fridge`, `charging_locker`, `comic_shelf`, `washer`, `ice_pipes`, `thermo_sign`, `hourglass`, `wall_clock`, `elevator_door`
+- **랜드마크** (완료): `snack_bar`. TV 벽은 모델 없이 코드로 그린다(화면조정 무늬 캔버스).
+- **소품(고정)** (완료): `massage_chair`, `sikhye_fridge`, `charging_locker`, `comic_shelf`, `washer`, `ice_pipes`, `hourglass`. 문 위 온도 표시판, 불가마 온도계, 벽시계, 엘리베이터 문은 모델 없이 코드로 그린다.
 - **소품(물리)** (완료): `mat`, `mokchim`, `egg`, `sikhye_can`, `hinoki_ball`, `foot_bucket`, `laundry_cart`, `straw_mat`. 양머리 수건은 굴러다니는 소품이 아니라 매트 위에 가지런히 놓인 파편이라 4단계로 옮겼다.
 
 `COL_*` / `ANCHOR_*` 이름 규칙을 지키고, `scripts/build-assets.mjs`의 `MOBILE_VARIANT_SPACES`에 `jjimjilbang`을 추가한다.

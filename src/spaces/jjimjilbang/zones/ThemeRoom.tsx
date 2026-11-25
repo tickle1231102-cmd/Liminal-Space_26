@@ -1,4 +1,5 @@
 import { Box, Ceiling, Floor, LIGHT, Model, PALETTE, Wall, type Surface } from '../JjimKit'
+import { KilnGauge } from '../JjimMachines'
 import { Steam } from '../../../core/world/Steam'
 import type { SpaceWorldProps } from '../../types'
 import { ALLEY, DOORS, ROOMS, type RoomKind } from '../layout'
@@ -57,6 +58,7 @@ export function ThemeRoom({
           ))}
           {/* 벽돌 볼트 천장 (art/blender/jjimjilbang/kiln_dome.py) — 틈새의 붉은 빛은 바닥 가까이에서 올라온다 */}
           <Model name="kiln_dome" position={[cx, 0, cz]} />
+          <KilnGauge reduceMotion={reduceMotion} />
           <pointLight position={[cx, 0.5, cz]} color={look.light} intensity={look.intensity} distance={13} decay={1.6} />
         </>
       ) : (
@@ -65,8 +67,19 @@ export function ThemeRoom({
           <pointLight position={[cx, h - 0.5, cz]} color={look.light} intensity={look.intensity} distance={12} decay={1.6} />
         </>
       )}
+      {kind === 'salt' && (
+        <>
+          {/* 모래시계 선반 — 셋 다 같은 높이에서 멈춰 있다 (hourglass.py) */}
+          <Box position={[cx, 1.0, z[1] - 0.26]} size={[1.6, 0.04, 0.26]} color={PALETTE.woodDark} surface="WoodDark" solid={false} />
+          {[-0.45, 0, 0.45].map((dx) => (
+            <Model key={dx} name="hourglass" position={[cx + dx, 1.02, z[1] - 0.26]} />
+          ))}
+        </>
+      )}
       {kind === 'ice' && (
         <>
+          {/* 성에 낀 냉각 배관 — 골목 반대편 벽 (ice_pipes.py) */}
+          <Model name="ice_pipes" position={[far - 0.125, 0, cz]} rotationY={-Math.PI / 2} />
           {/* 찬 안개 — 천장 배관 높이에서 바닥으로 가라앉고, 문턱 밖 골목으로 조금 넘친다 */}
           <Steam x={[x[0] + 0.4, x[1] - 0.4]} z={[z[0] + 0.4, z[1] - 0.4]} y={h - 0.2} rise={-(h - 0.3)} color="#e4f3fb" count={quality === 'high' ? 260 : 70} opacity={0.16} reduceMotion={reduceMotion} />
           <Steam x={[x[0] - 1.6, x[0] + 0.6]} z={ROOMS.ice.door} y={0.55} rise={-0.45} color="#e4f3fb" count={quality === 'high' ? 48 : 14} opacity={0.12} reduceMotion={reduceMotion} />

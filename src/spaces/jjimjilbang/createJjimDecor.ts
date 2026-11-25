@@ -1,5 +1,5 @@
 import seedrandom from 'seedrandom'
-import { CHANNEL, HALL, LAUNDRY, ROOMS, SLEEP, type Range } from './layout'
+import { CHANNEL, HALL, HALL_FIX, LAUNDRY, ROOMS, SLEEP, type Range } from './layout'
 
 export type Vec3 = [number, number, number]
 export type JjimPropKind = 'mat' | 'mokchim' | 'egg' | 'can' | 'ball' | 'bucket' | 'straw' | 'cart'
@@ -48,6 +48,8 @@ const HALL_MATS: Rect = { x: [HALL.x[0] + 3.5, HALL.x[1] - 2], z: [HALL.z[0] + 5
 const HALL_AVOID: Rect[] = [
   { x: [-4, 4], z: [-17, -12] },
   { x: [12, 16], z: [-36, -30] },
+  // 양머리 수건이 놓인 고정 매트 둘레
+  { x: [HALL_FIX.towelMat[0] - 1.6, HALL_FIX.towelMat[0] + 1.6], z: [HALL_FIX.towelMat[1] - 1.8, HALL_FIX.towelMat[1] + 1.8] },
 ]
 /** 매점 카운터 앞 — 계란과 식혜 캔이 굴러다니는 곳 */
 const SNACK_FRONT: Rect = { x: [-14, -8], z: [HALL.z[0] + 4, HALL.z[0] + 7] }
@@ -124,4 +126,9 @@ export function pickLitCave(seed: string, north: number, east: number): { bank: 
   const k = Math.floor(rng() * (north + east))
   const tier = rng() < 0.5 ? 0 : 1
   return k < north ? { bank: 'north', index: k, tier } : { bank: 'east', index: k - north, tier }
+}
+
+/** 혼자 작동하는 안마의자 한 대 — 몇 번째인지만 시드로 고른다. */
+export function pickActiveChair(seed: string, count: number): number {
+  return Math.floor(seedrandom(`${seed}:jjimjilbang:massage`)() * count)
 }

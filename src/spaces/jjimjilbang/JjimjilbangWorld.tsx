@@ -9,14 +9,16 @@ import { HallZone } from './zones/HallZone'
 import { SleepCaveZone } from './zones/SleepCaveZone'
 import { StaffZone } from './zones/StaffZone'
 import { JjimProps } from './JjimProps'
+import { JjimFragments } from './JjimFragments'
+import { JjimAudio } from './JjimAudio'
 
 /**
  * 새벽의 찜질방 — PRD 15절, docs/space-jjimjilbang-plan.md.
  * 입구 → 찜질 골목(족욕 수로·테마방 4개) → 대청마루 홀 → 토굴 수면실 → 직원 통로 → 카운터 뒤 문으로
- * 한 바퀴 도는 고리 동선. 3단계까지: 재질·랜드마크 모델·방별 빛, 시드로 뿌리는 물리 소품, 얼음방 찬 안개.
- * 고정 소품·파편·오디오는 4단계.
+ * 한 바퀴 도는 고리 동선. 재질·모델·방별 빛, 시드로 뿌리는 물리 소품, 혼자 움직이는 기계(JjimMachines),
+ * 파편(JjimFragments), 합성 앰비언스(JjimAudio)까지 들어 있다.
  */
-export default function JjimjilbangWorld({ reduceMotion, quality }: SpaceWorldProps) {
+export default function JjimjilbangWorld({ reduceMotion, audioEnabled, quality }: SpaceWorldProps) {
   return (
     <>
       <JjimAtmosphere />
@@ -24,12 +26,14 @@ export default function JjimjilbangWorld({ reduceMotion, quality }: SpaceWorldPr
       <AlleyZone reduceMotion={reduceMotion} />
       <ThemeRoom kind="salt" />
       <ThemeRoom kind="clay" />
-      <ThemeRoom kind="kiln" />
+      <ThemeRoom kind="kiln" reduceMotion={reduceMotion} />
       <ThemeRoom kind="ice" reduceMotion={reduceMotion} quality={quality} />
-      <HallZone />
+      <HallZone reduceMotion={reduceMotion} />
       <SleepCaveZone />
-      <StaffZone />
+      <StaffZone reduceMotion={reduceMotion} />
       <JjimProps />
+      <JjimFragments />
+      <JjimAudio enabled={audioEnabled} />
       {!reduceMotion && (
         <EffectComposer multisampling={0} enableNormalPass={false}>
           {/* 데스크톱 전용 접촉 그림자(AO) — 박스 셸이라 라이트맵 대신 화면 공간에서 */}
