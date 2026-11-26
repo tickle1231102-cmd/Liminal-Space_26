@@ -1,6 +1,6 @@
 # 공간 디자인 계획 — 새벽의 찜질방
 
-> **상태**: 5단계까지 구현. 남은 것은 중급 안드로이드 실기기 측정(`docs/PERF_CHECKPOINT.md`)과 이변 찾기 모드 자체의 구현(PRD 14절, `src/core/anomaly`는 아직 없다). 평면 좌표의 원본은 `src/spaces/jjimjilbang/layout.ts`다. 공간 ID `jjimjilbang` (`?space=jjimjilbang`, `src/spaces/jjimjilbang`, `art/blender/jjimjilbang`).
+> **상태**: 5단계까지 구현. 남은 것은 중급 안드로이드 실기기 측정(`docs/PERF_CHECKPOINT.md`)과 찜질방을 이변 찾기 모드에 올리는 일(9절). 평면 좌표의 원본은 `src/spaces/jjimjilbang/layout.ts`다. 공간 ID `jjimjilbang` (`?space=jjimjilbang`, `src/spaces/jjimjilbang`, `art/blender/jjimjilbang`).
 > [물 공간 아이디어](water-space-ideas.md) 3번 후보를 구체화한 문서다. AGENTS.md의 절대 규칙·디자인 원칙과 PRD 12~13절의 4구역 존 매핑 방식을 그대로 상속한다.
 > 좌표와 수치는 화이트박스용 초안이다. 조명·재질·세부 좌표는 Cursor에서 눈으로 보며 조정한다.
 
@@ -226,7 +226,7 @@ zones/EntranceZone.tsx  AlleyZone.tsx  ThemeRoom.tsx(kind='salt'|'clay'|'kiln'|'
 ## 9. 이변 찾기 모드 카탈로그 초안 (PRD 14절)
 
 고리: 입구 → 골목 → 홀 → 수면실 → 직원 통로 → 카운터 뒤 문 → 입구. 카운터 표시는 카운터 걸이의 열쇠 팔찌 개수(0~8).
-모드 자체(`src/core/anomaly`, `SpaceDefinition.anomaly`)는 아직 없다. 아래는 그 모드가 생겼을 때 `AnomalyDef.apply`가 건드릴 곳까지 적은 초안이다. 전부 되돌릴 수 있는 변경이고, 사람 형상·소리로 놀래키는 것은 없다.
+모드 자체(`src/core/anomaly`)는 센토에서 먼저 구현됐다. 찜질방은 아직 `SpaceDefinition.anomaly`를 선언하지 않았다. 아래는 찜질방 이변을 `useAnomaly(id)`로 걸 때 건드릴 곳까지 적은 초안이다. 전부 되돌릴 수 있는 변경이고, 사람 형상·소리로 놀래키는 것은 없다.
 
 | 세기 | 이변 | 건드리는 곳 |
 |---|---|---|

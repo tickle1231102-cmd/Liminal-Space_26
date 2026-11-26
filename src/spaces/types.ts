@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import type { AnomalyConfig } from '../core/anomaly/types'
 
 export type Vec3 = [number, number, number]
 
@@ -27,6 +28,8 @@ export type SpaceDefinition = {
   spawn: Vec3
   clearColor: string
   exposure: number
+  /** 선택 모드 '이변 찾기'(PRD 14절)의 고리 구간과 이변 목록. 없으면 이 공간은 그 모드에 나오지 않는다 */
+  anomaly?: AnomalyConfig
   /** 공간별 코드 분할 — 선택된 공간만 로드된다 */
   load: () => Promise<{ default: ComponentType<SpaceWorldProps> }>
 }

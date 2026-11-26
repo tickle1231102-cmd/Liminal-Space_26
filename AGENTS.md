@@ -47,7 +47,7 @@
 - `docs/STORE_CHECKLIST.md` — 3스토어 출시 체크리스트
 - `src/app` — 앱 셸: 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지. 공간은 `spaces/registry`로만 안다.
 - `src/core` — 모든 공간이 공유하는 엔진 계층. 특정 공간을 몰라야 한다.
-  - `core/player` 1인칭 컨트롤러·상호작용·탑승 상태 / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`·물(`water` 영역 레지스트리, `WaterSurface` 수면, `Steam` 김·찬 안개)
+  - `core/anomaly` 선택 모드 '이변 찾기'(PRD 14절): 추첨·판정·고리 진행·화면 전환. 공간은 `SpaceDefinition.anomaly`와 `useAnomaly(id)`로만 참여한다 / `core/player` 1인칭 컨트롤러·상호작용·탑승 상태·순간이동 요청(`teleport`) / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`·물(`water` 영역 레지스트리, `WaterSurface` 수면, `Steam` 김·찬 안개)
 - `src/spaces` — 공간(버전)별 코드. 아래 "공간 구조" 절 참고.
   - `spaces/types.ts` 공간 계약(`SpaceDefinition`), `spaces/registry.ts` 공간 목록
   - `spaces/park` 야간 놀이공원(기본값): `zones/`(정문 광장·미드웨이·먹거리·백스테이지), `objects/`(풍선·탑승 시트), `audio/`, 분위기·파편·절차적 소품

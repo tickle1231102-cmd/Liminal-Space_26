@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useAnomaly } from '../../../core/anomaly/store'
 import { Box, Ceiling, LAMP_WOMEN, Model, ModelRow, ModuleFloor, PARTITION_TOP, TileWall, WarmLamp } from '../BathKit'
 import { Water } from '../../../core/world/WaterSurface'
 import { SHOWER_Z } from '../createBathDecor'
@@ -35,6 +36,11 @@ export function BathHallZone({
   const mx = mirrorX(side)
   const rot = (r: number) => (side === 'women' ? -r : r)
   const women = side === 'women'
+  // 이변(PRD 14절)은 고리 구간인 남탕에만 건다
+  const noSteam = useAnomaly('no-steam') && !women
+  const hotEmpty = useAnomaly('hot-tub-empty') && !women
+  const waterDark = useAnomaly('water-dark') && !women
+  const muralSea = useAnomaly('mural-sea') && !women
   const HALL = mirrorRange(side, [-14, 14])
   const TUB = { ...TUB_M, x: mirrorRange(side, TUB_M.x) }
   const HOT = { ...HOT_M, x: mirrorRange(side, HOT_M.x) }
@@ -82,12 +88,12 @@ export function BathHallZone({
         rotation={[-RAMP_ANGLE, 0, 0]}
         visible={false}
       />
-      <Water id={id('tub')} x={TUB.x} z={TUB.z} y={TUB.water} floor={TUB.bottom} reduceMotion={reduceMotion} />
-      <Steam x={TUB.x} z={TUB.z} y={TUB.water} count={Math.round(90 * steam)} reduceMotion={reduceMotion} />
+      <Water id={id('tub')} x={TUB.x} z={TUB.z} y={TUB.water} floor={TUB.bottom} color={waterDark ? '#06090b' : undefined} opacity={waterDark ? 0.96 : undefined} reduceMotion={reduceMotion} />
+      {!noSteam && <Steam x={TUB.x} z={TUB.z} y={TUB.water} count={Math.round(90 * steam)} reduceMotion={reduceMotion} />}
 
       {/* 열탕 — 높은 테두리, 콜라이더는 모델의 COL_* */}
       <Model name="hot_tub" position={hotCenter} />
-      <Water
+      {!hotEmpty && <Water
         id={id('hot')}
         x={[HOT.x[0] + 0.25, HOT.x[1] - 0.25]}
         z={[HOT.z[0] + 0.25, HOT.z[1] - 0.25]}
@@ -95,9 +101,9 @@ export function BathHallZone({
         floor={0}
         color="#5a9a94"
         reduceMotion={reduceMotion}
-      />
+      />}
       {/* 열탕은 김이 더 짙다 */}
-      <Steam x={[HOT.x[0] + 0.3, HOT.x[1] - 0.3]} z={[HOT.z[0] + 0.3, HOT.z[1] - 0.3]} y={HOT.rim - 0.08} count={Math.round(60 * steam)} opacity={0.08} reduceMotion={reduceMotion} />
+      {!noSteam && !hotEmpty && <Steam x={[HOT.x[0] + 0.3, HOT.x[1] - 0.3]} z={[HOT.z[0] + 0.3, HOT.z[1] - 0.3]} y={HOT.rim - 0.08} count={Math.round(60 * steam)} opacity={0.08} reduceMotion={reduceMotion} />}
 
       {/* 좌식 샤워 — 서쪽 벽면(모델 뒷면이 벽 안쪽 면에 붙는다)과 가운데 등 맞댄 섬 */}
       <ModelRow name="shower_unit" items={showers} />
@@ -116,10 +122,10 @@ export function BathHallZone({
           {/* 벽: 서쪽(여탕과의 칸막이 — 천장 1.8 m 아래에서 끊긴다), 동쪽(보일러실 문), 북쪽(벽화) */}
           <TileWall axis="z" at={MIRROR_X} from={-36} to={-10} partition />
           {/* 양쪽 탕의 김이 칸막이 위로 넘실댄다 */}
-          <Steam x={[MIRROR_X - 1.2, MIRROR_X + 1.2]} z={[-34, -12]} y={PARTITION_TOP - 0.9} count={Math.round(70 * steam)} opacity={0.05} reduceMotion={reduceMotion} />
+          {!noSteam && <Steam x={[MIRROR_X - 1.2, MIRROR_X + 1.2]} z={[-34, -12]} y={PARTITION_TOP - 0.9} count={Math.round(70 * steam)} opacity={0.05} reduceMotion={reduceMotion} />}
           <TileWall axis="z" at={14} from={-36} to={-10} gaps={[[-30, -28]]} />
           <TileWall axis="x" at={-36} from={-14} to={14} />
-          <Model name="mural" position={[0, 3.6, -35.86]} />
+          <Model key={muralSea ? 'sea' : 'fuji'} name={muralSea ? 'mural_sea' : 'mural'} position={[0, 3.6, -35.86]} />
         </>
       )}
 

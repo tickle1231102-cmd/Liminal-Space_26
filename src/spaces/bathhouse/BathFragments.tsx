@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
+import { useAnomaly } from '../../core/anomaly/store'
 import { Box } from './BathKit'
 import { BANDAI } from './zones/DressingZone'
 
@@ -76,6 +77,10 @@ const COINS: { at: [number, number]; d: [number, number]; r: number; color: stri
 ]
 
 export function BathFragments() {
+  // 이변(PRD 14절): 요금표 숫자, 시계 시각, 휴업 팻말
+  const priceChanged = useAnomaly('price-changed')
+  const clockMoved = useAnomaly('clock-moved')
+  const closedGone = useAnomaly('closed-sign-gone')
   const price = useMemo(
     () =>
       canvasTex(384, 512, (g) => {
@@ -89,14 +94,14 @@ export function BathFragments() {
         g.font = `bold 64px ${SERIF}`
         g.fillText('料 金', 192, 100)
         g.font = `40px ${SERIF}`
-        ;['大人　480円', '中人　180円', '小人　 80円'].forEach((t, i) => g.fillText(t, 192, 190 + i * 64))
+        ;[priceChanged ? '大人　430円' : '大人　480円', '中人　180円', '小人　 80円'].forEach((t, i) => g.fillText(t, 192, 190 + i * 64))
         g.font = `30px ${SERIF}`
         g.fillText('営業 15:00〜24:00', 192, 410)
         g.font = `22px ${SERIF}`
         g.fillStyle = '#6a5a48'
         g.fillText('平成二十年 改定', 192, 470)
       }),
-    [],
+    [priceChanged],
   )
   const closed = useMemo(
     () =>
@@ -143,11 +148,12 @@ export function BathFragments() {
           g.fillRect(-w / 2, -len, w, len + 10)
           g.restore()
         }
-        // 2:47에 멈춤
-        hand(((2 + 47 / 60) / 12) * Math.PI * 2, 60, 9)
-        hand((47 / 60) * Math.PI * 2, 92, 5)
+        // 2:47에 멈춤 (이변이면 7:13)
+        const [hh, mm] = clockMoved ? [7, 13] : [2, 47]
+        hand(((hh + mm / 60) / 12) * Math.PI * 2, 60, 9)
+        hand((mm / 60) * Math.PI * 2, 92, 5)
       }),
-    [],
+    [clockMoved],
   )
 
   const kidsDay = useMemo(
@@ -190,7 +196,7 @@ export function BathFragments() {
       {/* 겐칸: 탈의실 벽의 요금표 — 남탕 노렌 오른쪽 */}
       <Plate position={[-1.2, 1.75, 8.14]} size={[0.6, 0.8]} map={price} />
       {/* 영업 중인데 바깥 유리문 안쪽에 휴업 팻말 */}
-      <Plate position={[1.4, 1.5, 19.75]} rotationY={Math.PI} size={[0.2, 0.5]} map={closed} />
+      {!closedGone && <Plate position={[1.4, 1.5, 19.75]} rotationY={Math.PI} size={[0.2, 0.5]} map={closed} />}
       {/* 반다이 옆(남탕 쪽) 분실물 상자와 메모 */}
       <Box position={[-8.6, 0.18, 7.4]} size={[0.5, 0.36, 0.4]} color="#9a7a52" />
       <mesh position={[-8.6, 0.365, 7.4]} rotation={[-Math.PI / 2, 0, 0.2]}>

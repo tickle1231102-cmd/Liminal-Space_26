@@ -11,6 +11,7 @@ import * as THREE from 'three'
 import { sampleInput } from '../input/controls'
 import { useInteraction } from './InteractionContext'
 import { rideState } from './rideState'
+import { takeTeleport } from './teleport'
 import { submergedDepth } from '../world/water'
 import type { ComfortSettings } from '../../app/comfort'
 
@@ -138,6 +139,16 @@ export function PlayerController({
 
     const rb = body.current
     if (!rb) return
+
+    // 밖에서 요청한 순간이동(고리 구간 되돌리기) — 들고 있던 것은 놓는다
+    const tp = takeTeleport()
+    if (tp && !riding) {
+      rb.setTranslation({ x: tp.position[0], y: tp.position[1], z: tp.position[2] }, true)
+      rb.setLinvel({ x: 0, y: 0, z: 0 }, true)
+      yaw.current = tp.yaw
+      pitch.current = 0
+      if (interaction.heldId) interaction.setHeldId(null)
+    }
 
     if (!riding) dismounted.current = null
     if (riding && dismounted.current === interaction.heldId) {
