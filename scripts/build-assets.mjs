@@ -48,7 +48,7 @@ async function compress(file) {
 }
 
 /** 모바일 프리셋용 저해상도 변형(<name>.mobile.glb)을 만드는 공간 — 런타임 core/world/quality가 고른다 */
-const MOBILE_VARIANT_SPACES = ['bathhouse']
+const MOBILE_VARIANT_SPACES = ['bathhouse', 'jjimjilbang']
 const MOBILE_TEXTURE = 512
 
 async function mobileVariant(file) {

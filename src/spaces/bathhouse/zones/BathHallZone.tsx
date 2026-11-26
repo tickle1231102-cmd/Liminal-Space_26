@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { Box, Ceiling, LAMP_WOMEN, Model, ModelRow, ModuleFloor, PARTITION_TOP, TileWall, WarmLamp } from '../BathKit'
-import { Water } from '../Water'
+import { Water } from '../../../core/world/WaterSurface'
 import { SHOWER_Z } from '../createBathDecor'
-import { Steam } from '../Steam'
+import { Steam } from '../../../core/world/Steam'
 import type { SpaceWorldProps } from '../../types'
 
 const H = 6

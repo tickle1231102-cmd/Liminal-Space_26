@@ -27,7 +27,7 @@
 
 ## 게임 디자인 원칙 (변경 시 PRD.md와 함께 갱신)
 
-- **목표 없는 배회형**: 퀘스트 로그, 목표 마커, 전투, 실패 상태를 추가하지 않는다.
+- **목표 없는 배회형**: 퀘스트 로그, 목표 마커, 전투, 실패 상태를 추가하지 않는다. 예외는 별도 선택 모드인 '이변 찾기'(PRD 14절) 하나뿐이다. 이 모드도 게임오버·벌칙 연출 없이 카운터가 조용히 0으로 돌아가는 방식만 허용하고, 본편 배회 모드에는 규칙·카운터를 넣지 않는다.
 - **상호작용은 최소한으로**: 밀기/잡기/타기 정도의 단일 인터랙션 축을 유지한다.
 - **대사 없음**: 내러티브는 메모/낙서/라디오 방송 같은 파편적 단서로만 전달하고, 설명하거나 완결짓지 않는다.
 - **감정 톤은 공포가 아니라 위화감**: "무섭다"보다 "이상하게 평온한데 뭔가 잘못됐다"를 지향한다. 점프스케어, 추격 AI 등은 넣지 않는다.
@@ -47,12 +47,13 @@
 - `docs/STORE_CHECKLIST.md` — 3스토어 출시 체크리스트
 - `src/app` — 앱 셸: 부트스트랩, 캔버스, HUD, 편의 옵션, 플랫폼 감지. 공간은 `spaces/registry`로만 안다.
 - `src/core` — 모든 공간이 공유하는 엔진 계층. 특정 공간을 몰라야 한다.
-  - `core/player` 1인칭 컨트롤러·상호작용·탑승 상태 / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`
+  - `core/player` 1인칭 컨트롤러·상호작용·탑승 상태 / `core/input` 키보드·마우스·터치 / `core/audio` 피치 워블 / `core/proc` seedrandom 재시드 / `core/world` `GltfAsset`·`DistanceLod`·물(`water` 영역 레지스트리, `WaterSurface` 수면, `Steam` 김·찬 안개)
 - `src/spaces` — 공간(버전)별 코드. 아래 "공간 구조" 절 참고.
   - `spaces/types.ts` 공간 계약(`SpaceDefinition`), `spaces/registry.ts` 공간 목록
   - `spaces/park` 야간 놀이공원(기본값): `zones/`(정문 광장·미드웨이·먹거리·백스테이지), `objects/`(풍선·탑승 시트), `audio/`, 분위기·파편·절차적 소품
   - `spaces/school` 심야 학교(PRD 12절): `zones/`(현관·복도·급식실·강당/방송실), `objects/`, `audio/`, 키트·텍스처·파편
   - `spaces/bathhouse` 심야 센토(PRD 13절): `zones/`(겐칸·탈의실·욕실·보일러실, 여탕 날개는 `WomenDressingZone` + `BathHallZone side="women"` 거울상, 보일러실 철창까지 가는 `ServiceCorridorZone`), `BathKit`(콜라이더·모듈 배치 키트, 모델은 `art/blender/bathhouse`), 분위기
+  - `spaces/jjimjilbang` 새벽의 찜질방(PRD 15절, 계획은 `docs/space-jjimjilbang-plan.md`): `layout.ts`(평면 좌표 원본), `JjimKit`(박스 셸 + 공용 표면 재질 + 모델 배치, 모델은 `art/blender/jjimjilbang`, 공용 재질은 `art/blender/lib/jjim_common.py`), `zones/`(입구·찜질 골목·테마방·대청마루·토굴 수면실·직원 통로), `createJjimDecor`·`JjimProp(s)`(시드 소품 배치, 밀기/끌기·부력), `JjimMachines`(혼자 움직이는 안마의자·온도계·세탁기·TV), `JjimFragments`, `JjimAudio`. 계획의 5단계까지 구현 — 모바일('low')에서는 `JjimKit`의 `FillLight`/`Lamp lit`으로 조명 수를 줄인다. 실기기 성능 측정은 아직 없다.
 - `art/blender` — Blender 헤드리스 모델 스크립트(`lib/` 공용, `<space>/<name>.py`) → `npm run assets:build` → `public/assets/models/<space>/`
 - `public/assets` — glTF/오디오 (출처는 `ATTRIBUTION.md`)
 - `electron/` — Steam용 Electron 셸
