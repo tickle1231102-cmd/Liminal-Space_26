@@ -12,6 +12,7 @@ import { ServiceCorridorZone } from './zones/ServiceCorridorZone'
 import { BathProps } from './BathProps'
 import { BathFragments } from './BathFragments'
 import { BathAudio } from './BathAudio'
+import { BathAnomalySigns } from './BathAnomalySigns'
 
 /**
  * 심야 센토 — PRD 13절. 겐칸 → 반다이·탈의실 → 욕실 → 보일러실·사우나.
@@ -38,6 +39,7 @@ export default function BathhouseWorld({ reduceMotion, audioEnabled, quality }: 
       <BathProps zone="w-hall" />
       <BathProps zone="w-tub" />
       <BathFragments />
+      <BathAnomalySigns />
       <BathAudio enabled={audioEnabled} />
       <ServiceCorridorZone />
       <DistanceLod center={[20, 0, -28]} near={40}>

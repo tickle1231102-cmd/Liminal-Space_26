@@ -1,4 +1,5 @@
 import type { SpaceDefinition } from '../types'
+import { BATH_ANOMALY } from './anomalies'
 
 export const bathhouse: SpaceDefinition = {
   id: 'bathhouse',
@@ -13,5 +14,6 @@ export const bathhouse: SpaceDefinition = {
   spawn: [0, 0.15, 17],
   clearColor: '#101315',
   exposure: 1.2,
+  anomaly: BATH_ANOMALY,
   load: () => import('./BathhouseWorld'),
 }

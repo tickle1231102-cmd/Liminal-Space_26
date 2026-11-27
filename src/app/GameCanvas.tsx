@@ -12,11 +12,17 @@ import { PerfSampler } from './PerfHud'
 import { Crosshair } from './Hud'
 import { setQuality } from '../core/world/quality'
 import { detectPlatform, isTouchPrimary } from './platform'
+import { AnomalyRunner } from '../core/anomaly/AnomalyRunner'
+import { AnomalyOverlay } from '../core/anomaly/AnomalyOverlay'
+import { anomalyModeRequested } from '../core/anomaly/mode'
 
 /** 모바일(Capacitor·터치 기기)은 저사양 프리셋 */
 const QUALITY: SpaceWorldProps['quality'] =
   detectPlatform() === 'capacitor' || isTouchPrimary() ? 'low' : 'high'
 setQuality(QUALITY)
+
+/** 선택 모드 '이변 찾기'(PRD 14절) — 공간이 anomaly를 선언했을 때만 켜진다 */
+const ANOMALY_MODE = anomalyModeRequested()
 
 type GameSceneProps = {
   comfort: ComfortSettings
@@ -54,10 +60,12 @@ function WorldContent({
   return (
     <>
       <World reduceMotion={comfort.reduceMotion} audioEnabled={audioEnabled} quality={QUALITY} />
+      {ANOMALY_MODE && space.anomaly && <AnomalyRunner config={space.anomaly} />}
       <PlayerController
         spawn={space.spawn}
         comfort={comfort}
-        onReseed={onReseed}
+        // 이변 찾기에서는 재시드로 소품이 바뀌면 그것이 이변처럼 보이므로 막는다
+        onReseed={ANOMALY_MODE && space.anomaly ? undefined : onReseed}
         controlsEnabled={started}
       />
       <PerfSampler visible={comfort.showFps} />
@@ -117,6 +125,7 @@ export function GameCanvas({ comfort, audioEnabled, started, space }: GameSceneP
         </Canvas>
         <Crosshair />
         <InteractPrompt />
+        <AnomalyOverlay />
       </InteractionProvider>
     </WorldSeedContext.Provider>
   )

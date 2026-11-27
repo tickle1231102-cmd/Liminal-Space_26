@@ -1,3 +1,4 @@
+import { useAnomaly } from '../../../core/anomaly/store'
 import { Ceiling, Model, ModelRow, ModuleFloor, TileWall, Wall, WarmLamp } from '../BathKit'
 
 const H = 3.2
@@ -21,7 +22,14 @@ const PARTITION_GAP: [number, number] = [6.6, 8]
  * 반다이·탈의실 — 원작의 미드웨이. 배회의 중심축.
  * x[-10,10] · z[-10,8]
  */
+/** 이변 'locker-missing': 동쪽 벽 가운데 줄이 없다 */
+const LOCKERS_MISSING = LOCKERS.filter((l) => !(l.position[0] > 0 && l.position[2] === -2))
+/** 이변 'lamp-cold': 백열등 대신 차가운 흰빛 */
+const LAMP_COLD = '#a9c8ff'
+
 export function DressingZone() {
+  const lockerMissing = useAnomaly('locker-missing')
+  const lamp = useAnomaly('lamp-cold') ? LAMP_COLD : undefined
   return (
     <group name="bathhouse-dressing">
       <ModuleFloor x={[-10, 10]} z={[-10, 8]} module="floor_wood_module" />
@@ -34,7 +42,7 @@ export function DressingZone() {
       <Model name="bandai" position={BANDAI} rotationY={Math.PI} />
 
       {/* 나무 락커 — 좌우 벽 안쪽 면(±9.875)에 등을 댄다 */}
-      <ModelRow name="locker_bank" items={LOCKERS} />
+      <ModelRow key={lockerMissing ? 'missing' : 'all'} name="locker_bank" items={lockerMissing ? LOCKERS_MISSING : LOCKERS} />
 
       {/* 가운데 긴 의자 두 개 */}
       <ModelRow name="bench" items={BENCHES} />
@@ -45,10 +53,10 @@ export function DressingZone() {
       {/* 욕실과의 경계 벽 — 욕실 쪽 면이 타일이라 같은 모듈을 쓴다 */}
       <TileWall axis="x" at={-10} from={-14} to={14} gaps={[[-2, 2]]} />
 
-      <WarmLamp position={[0, H - 0.3, 3]} intensity={5} />
-      <WarmLamp position={[0, H - 0.3, -5]} intensity={5} />
-      <WarmLamp position={[-6, H - 0.3, -1]} intensity={3} />
-      <WarmLamp position={[6, H - 0.3, -1]} intensity={3} />
+      <WarmLamp position={[0, H - 0.3, 3]} intensity={5} color={lamp} />
+      <WarmLamp position={[0, H - 0.3, -5]} intensity={5} color={lamp} />
+      <WarmLamp position={[-6, H - 0.3, -1]} intensity={3} color={lamp} />
+      <WarmLamp position={[6, H - 0.3, -1]} intensity={3} color={lamp} />
     </group>
   )
 }

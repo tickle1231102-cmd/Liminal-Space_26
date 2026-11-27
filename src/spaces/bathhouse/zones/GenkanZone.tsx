@@ -1,5 +1,6 @@
 import { ModelBoundary } from '../../../core/world/ModelBoundary'
 import { Noren } from '../Noren'
+import { useAnomaly } from '../../../core/anomaly/store'
 import { Box, Ceiling, ModelRow, ModuleFloor, PALETTE, Wall, WarmLamp } from '../BathKit'
 
 const H = 3
@@ -16,6 +17,9 @@ const SHOE_LOCKERS = [-1, 1].flatMap((side) =>
  * x[-6,6] · z[8,20]
  */
 export function GenkanZone({ reduceMotion }: { reduceMotion: boolean }) {
+  // 이변(PRD 14절): 남탕 노렌이 좌우 반전됐거나, 두 입구 모두 붉은 女 노렌이다
+  const mirrored = useAnomaly('noren-mirrored')
+  const bothWomen = useAnomaly('noren-both-women')
 
   return (
     <group name="bathhouse-genkan">
@@ -35,7 +39,9 @@ export function GenkanZone({ reduceMotion }: { reduceMotion: boolean }) {
       {/* 남탕 탈의실 쪽 벽과 노렌 — 여탕 노렌과 모서리를 맞대고 반다이 쪽으로 붙는다 */}
       <Wall axis="x" at={8} from={-10} to={10} height={3.2} gaps={[[-5.6, -2.6]]} surface="Plaster" />
       <ModelBoundary label="noren">
-        <Noren position={[-4.1, 2.3, 8]} reduceMotion={reduceMotion} />
+        <group position={[-4.1, 2.3, 8]} scale={[mirrored ? -1 : 1, 1, 1]}>
+          <Noren key={bothWomen ? 'women' : 'men'} model={bothWomen ? 'noren_women' : 'noren'} position={[0, 0, 0]} reduceMotion={reduceMotion} />
+        </group>
       </ModelBoundary>
 
       {/* 나무 열쇠 신발장 두 줄 — 벽 안쪽 면(±5.875)에 등을 대고 안쪽을 본다. 서쪽 첫 칸은 여탕 통로 자리 */}

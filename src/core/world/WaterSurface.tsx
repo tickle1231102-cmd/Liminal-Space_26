@@ -52,6 +52,7 @@ export function Water({
   y,
   floor,
   color = '#4f9a9c',
+  opacity = 0.62,
   reduceMotion,
 }: {
   id: string
@@ -60,6 +61,8 @@ export function Water({
   y: number
   floor: number
   color?: string
+  /** 0이면 바닥이 다 비치고 1이면 전혀 비치지 않는다 */
+  opacity?: number
   reduceMotion: boolean
 }) {
   useWaterVolume({ id, x, z, surface: y, floor })
@@ -73,7 +76,7 @@ export function Water({
     const mat = new THREE.MeshPhysicalMaterial({
       color,
       transparent: true,
-      opacity: 0.62,
+      opacity,
       roughness: 0.12,
       metalness: 0,
       normalMap: a,
@@ -86,7 +89,7 @@ export function Water({
       depthWrite: false,
     })
     return { mat, a, b }
-  }, [w, d, color])
+  }, [w, d, color, opacity])
 
   useFrame((_, dt) => {
     if (reduceMotion) return
